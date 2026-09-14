@@ -59,7 +59,7 @@ export default async (req, context) => {
         return jsonResponse({ ok: true, elements: fresh });
       }
 
-      const { element } = body;
+      const { element, field } = body;
       if (!ELEMENT_IDS.includes(element)) {
         return jsonResponse({ error: 'invalid_element' }, 400);
       }
@@ -67,13 +67,26 @@ export default async (req, context) => {
       const elements = (await store.get('elements', { type: 'json' })) || emptyElements();
       ELEMENT_IDS.forEach((id) => { if (!elements[id]) elements[id] = emptyElement(); });
 
-      elements[element] = {
-        meaning: sanitizeText(body.meaning),
-        action: sanitizeText(body.action),
-        change: sanitizeText(body.change),
-        evidence: sanitizeText(body.evidence),
-        updatedAt: new Date().toISOString(),
-      };
+      const FIELD_KEYS = ['meaning', 'action', 'change', 'evidence'];
+
+      if (field) {
+        // 칸(quadrant) 단위 저장 — 이 칸만 갱신하고 다른 3칸은 그대로 둔다.
+        // 그룹원이 각자 다른 칸을 동시에 편집해도 서로 덮어쓰지 않도록 하기 위함.
+        if (!FIELD_KEYS.includes(field)) {
+          return jsonResponse({ error: 'invalid_field' }, 400);
+        }
+        elements[element][field] = sanitizeText(body.value);
+        elements[element].updatedAt = new Date().toISOString();
+      } else {
+        // 하위 호환용: 4칸을 한 번에 통째로 저장(예전 방식)
+        elements[element] = {
+          meaning: sanitizeText(body.meaning),
+          action: sanitizeText(body.action),
+          change: sanitizeText(body.change),
+          evidence: sanitizeText(body.evidence),
+          updatedAt: new Date().toISOString(),
+        };
+      }
 
       await store.set('elements', JSON.stringify(elements));
       return jsonResponse({ ok: true, elements });
