@@ -1,15 +1,17 @@
 # ZA2030 딥다이브세션 대시보드
 
-딥다이브세션에서 쓰는 3단계 워크숍 대시보드입니다. 스포트라이트 세션 3개 보드(핵심요소/Evidence Hunt/액션아이템)와
+딥다이브세션에서 쓰는 4단계 워크숍 대시보드입니다. 스포트라이트 세션 3개 보드(핵심요소/Evidence Hunt/액션아이템)와
 같은 기술 패턴(Netlify Functions v2 + Netlify Blobs)을 쓰지만, **완전히 독립된 새 사이트/저장소**이고
 데이터 저장소도 모두 별도라서 기존 보드에 영향을 주지 않습니다.
 
 - **① Live Poll**: 익명 1~5점 라이브 투표
 - **② Breakout Canvas**: 4개 그룹이 ZA2030 4대 요소 중 하나씩 맡아 깊이 토의하고 결과를 공유 캔버스에 기록
 - **③ Clustering Matrix**: 각 그룹 발표를 들으며 떠오른 키워드를 Impact × Effort 2x2 매트릭스 위에 올려 함께 보는 보드
+- **④ Prioritization**: Clustering Matrix의 QUICK WINS·STRATEGIC MOVES(①②사분면)에서 나온 후보 중 Top 2~3
+  액션을 라이브 투표로 좁히고, 진행자가 토론 후 최종 확정하는 보드
 
-모든 페이지 상단에는 같은 플로우 탭("① Live Poll → ② Breakout Canvas → ③ Clustering Matrix")이 있어
-세션 흐름을 따라 이동할 수 있습니다.
+모든 페이지 상단에는 같은 플로우 탭("① Live Poll → ② Breakout Canvas → ③ Clustering Matrix →
+④ Prioritization")이 있어 세션 흐름을 따라 이동할 수 있습니다.
 
 ## 파일 구성
 
@@ -20,9 +22,12 @@ deepdive-poll/
 ├── breakout.html                    # ② Breakout Canvas — 작성하기/함께 보기 탭
 ├── clustering.html                  # ③ 참가자용 키워드 제출 화면
 ├── clustering-host.html             # ③ 진행자용 실시간 매트릭스 화면 (빔프로젝터/큰 화면)
+├── prioritize.html                  # ④ 참가자용 우선순위 투표 화면
+├── prioritize-host.html             # ④ 진행자용 후보 관리·투표 현황·최종 확정 화면 (빔프로젝터/큰 화면)
 ├── netlify/functions/poll.js        # 투표 저장·집계·초기화 API (Netlify Functions v2)
 ├── netlify/functions/breakout.js    # Breakout Canvas 저장·조회·초기화 API (Netlify Functions v2)
 ├── netlify/functions/clustering.js  # Clustering Matrix 저장·조회·초기화 API (Netlify Functions v2)
+├── netlify/functions/prioritize.js  # Prioritization 저장·집계·초기화 API (Netlify Functions v2)
 ├── netlify.toml                      # 빌드 설정 (esbuild 번들러)
 ├── package.json                       # @netlify/blobs 의존성 고정 (11.0.3)
 └── README.md
@@ -48,6 +53,9 @@ deepdive-poll/
      각자 폰으로 접속해 키워드를 올리는 화면
    - **Clustering Matrix 진행자용**: `https://<사이트주소>/clustering-host.html` — 발표 화면에 띄워두는
      실시간 매트릭스 보드
+   - **Prioritization 참가자용**: `https://<사이트주소>/prioritize.html` — 후보 액션 중 3표를 나눠 투표하는 화면
+   - **Prioritization 진행자용**: `https://<사이트주소>/prioritize-host.html` — 후보 가져오기/관리, 실시간
+     투표 현황, 최종 Top 2~3 확정 및 결정 문장 입력 화면
 
 ## 동작 방식 — ① Live Poll
 
@@ -102,11 +110,35 @@ deepdive-poll/
 - 세션당 최대 500개 키워드까지 보관하고, 그 이상 쌓이면 오래된 것부터 자동으로 정리됩니다(장시간 다회
   워크숍에서 데이터가 과도하게 쌓이는 것을 막기 위한 안전장치).
 
+## 동작 방식 — ④ Prioritization
+
+- **후보 액션 관리(진행자 화면)**: "클러스터링 매트릭스에서 가져오기" 버튼을 누르면 서버가 Clustering
+  Matrix 스토어(`za2030-deepdive-clustering`)를 직접 읽어 ①QUICK WINS·②STRATEGIC MOVES 사분면의
+  키워드만 가져와 후보로 추가합니다(대소문자·공백을 무시하고 중복 키워드는 건너뜀, ③PARK·④WATCH는
+  가져오지 않음). 진행자는 후보를 직접 추가하거나, 기존 후보의 문구를 수정·삭제할 수도 있습니다.
+- **참가자 화면(`prioritize.html`)**: 후보 액션 목록에서 최대 3개까지 선택(토글)한 뒤 "투표 제출"을
+  누르면 등록됩니다. 완전 익명이며, 기기별 로컬 토큰으로 재투표 시 이전 선택을 대체합니다(분산 투표 —
+  한 후보에 표를 몰아줄 수는 없음). 라이브 폴과 동일하게 서버의 초기화 시각(`resetAt`)을 확인해, 관리자가
+  전체 초기화한 뒤에는 로컬의 "이미 투표함" 캐시를 자동으로 지웁니다.
+- **실시간 투표 현황(진행자 화면)**: 후보별 득표수를 막대그래프로 보여주고, 2초 간격으로 자동 새로고침됩니다
+  (탭이 보이지 않을 때는 폴링 일시중지). 참가자 화면에는 득표수를 보여주지 않습니다(투표에 영향 주지 않기 위함).
+- **최종 확정(진행자 화면)**: 각 후보 옆의 "확정" 버튼으로 최종 Top 2~3 액션을 지정합니다(최대 3개, 토론
+  결과에 따라 득표 1위가 아니어도 진행자 재량으로 확정 가능). 확정된 액션마다 슬라이드의 "결정 문장" 틀
+  ("우리 팀은 ___을(를) 통해 ___을(를) 더 잘 살린다")에 맞춰 두 빈칸을 입력하면 자동 저장되어 참가자
+  화면에는 보이지 않고 진행자 화면에서만 관리·전시됩니다.
+- "CSV 다운로드" 버튼으로 (후보 액션/출처/득표수/최종 확정 여부/결정 문장) 표를 내려받을 수 있고,
+  "관리자 · 전체 초기화" 버튼으로 비밀번호 확인 후 후보·투표·확정 결과를 모두 지울 수 있습니다(다른
+  활동과 같은 `ADMIN_TOKEN` 사용).
+- 참가자 화면 하단의 "진행자 화면 열기" 버튼으로 비밀번호(기본값 `1234`)를 입력하면 `prioritize-host.html`이
+  새 탭으로 열립니다.
+- 데이터 저장: 완전히 새로운 Netlify Blobs 스토어 `za2030-deepdive-prioritize` — 다른 세 활동과 무관하며,
+  Clustering Matrix 스토어는 후보를 가져올 때만 읽기 전용으로 참조합니다.
+
 ## 참고
 
 - 원인 파악에 시간이 걸렸던 과거 트러블슈팅(v1 함수 방식으로 인한 `MissingBlobsEnvironmentError`)을
-  피하기 위해 세 함수 모두 처음부터 v2 방식(`export default` + `config.path`)으로 작성했고,
-  `getStore()` 호출을 try/catch로 감쌌습니다. `poll.js`/`breakout.js`/`clustering.js` 모두 로컬에서
-  Netlify Blobs를 흉내 낸 인메모리 스텁으로 시뮬레이션 테스트를 거쳤습니다.
+  피하기 위해 네 함수 모두 처음부터 v2 방식(`export default` + `config.path`)으로 작성했고,
+  `getStore()` 호출을 try/catch로 감쌌습니다. `poll.js`/`breakout.js`/`clustering.js`/`prioritize.js` 모두
+  로컬에서 Netlify Blobs를 흉내 낸 인메모리 스텁으로 시뮬레이션 테스트를 거쳤습니다.
 - 딥다이브세션에 활동이 더 추가되면 같은 방식(새 페이지 + 새 함수 + 새 Blobs 스토어)으로 이어서
-  확장하고, 플로우 탭에 ④를 추가하면 됩니다.
+  확장하고, 플로우 탭에 ⑤를 추가하면 됩니다.

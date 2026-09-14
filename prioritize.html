@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>Prioritization · ZA2030 딥다이브세션</title>
+<link rel="stylesheet" as="style" crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<style>
+  :root{
+    --blue-dark:#1D4E89;
+    --blue:#2D6CDF;
+    --ink:#14213D;
+    --sub:#5B6B85;
+    --bg:#EEF3FB;
+    --card:#FFFFFF;
+    --line:#DCE5F5;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Pretendard","-apple-system",BlinkMacSystemFont,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .flow-nav{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:12px 14px;
+    background:#fff;
+    border-bottom:1px solid var(--line);
+    flex-wrap:wrap;
+  }
+  .flow-tab{
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--sub);
+    text-decoration:none;
+    padding:7px 12px;
+    border-radius:999px;
+    background:#F1F5FC;
+    white-space:nowrap;
+  }
+  .flow-tab.active{ background:var(--blue-dark); color:#fff; }
+  .flow-arrow{ color:var(--sub); font-size:12.5px; }
+
+  .header{
+    width:100%;
+    background:linear-gradient(135deg,var(--blue-dark),var(--blue));
+    color:#fff;
+    padding:26px 20px 30px;
+    text-align:center;
+  }
+  .header .badge{
+    display:inline-block;
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:2px;
+    background:rgba(255,255,255,0.18);
+    padding:6px 14px;
+    border-radius:999px;
+    margin-bottom:10px;
+  }
+  .header h1{ margin:0 0 6px; font-size:clamp(19px,3vw,24px); font-weight:800; }
+  .header p{ margin:0; font-size:13.5px; opacity:0.9; line-height:1.5; }
+
+  .content{
+    width:100%;
+    max-width:520px;
+    padding:22px 18px 40px;
+    flex:1;
+  }
+
+  .vote-hint{
+    text-align:center;
+    font-size:13px;
+    color:var(--blue-dark);
+    font-weight:700;
+    margin-bottom:14px;
+  }
+
+  .candidate-list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .candidate-btn{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    text-align:left;
+    font-family:inherit;
+    font-size:15px;
+    font-weight:600;
+    color:var(--ink);
+    background:#fff;
+    border:2px solid var(--line);
+    border-radius:14px;
+    padding:14px 16px;
+    cursor:pointer;
+    min-height:56px;
+  }
+  .candidate-btn .chk{
+    flex:none;
+    width:24px;height:24px;
+    border-radius:7px;
+    border:2px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:14px;
+    color:#fff;
+  }
+  .candidate-btn.selected{ border-color:var(--blue); background:#F3F7FF; }
+  .candidate-btn.selected .chk{ background:var(--blue); border-color:var(--blue); }
+  .candidate-btn:disabled{ opacity:0.45; cursor:not-allowed; }
+
+  .empty-hint{
+    text-align:center;
+    color:var(--sub);
+    font-size:14px;
+    padding:36px 10px;
+  }
+
+  .submit-btn{
+    width:100%;
+    font-family:inherit;
+    font-size:16px;
+    font-weight:800;
+    color:#fff;
+    background:var(--blue-dark);
+    border:none;
+    border-radius:14px;
+    padding:14px;
+    min-height:52px;
+    cursor:pointer;
+  }
+  .submit-btn:disabled{ opacity:0.4; cursor:not-allowed; }
+
+  .status{
+    text-align:center;
+    font-size:13px;
+    color:var(--sub);
+    margin-top:12px;
+    min-height:18px;
+  }
+
+  .done-card{
+    display:none;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:34px 24px;
+    text-align:center;
+    box-shadow:0 6px 18px rgba(29,78,137,0.08);
+  }
+  .done-card.show{ display:block; }
+  .candidate-list.hide, .submit-wrap.hide{ display:none; }
+  .check{
+    width:60px;height:60px;border-radius:50%;
+    background:linear-gradient(135deg,var(--blue-dark),var(--blue));
+    color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:30px;
+    margin:0 auto 14px;
+  }
+  .done-card h2{ margin:0 0 12px; font-size:18px; }
+  .done-list{
+    text-align:left;
+    background:#F6F9FF;
+    border-radius:12px;
+    padding:14px 16px;
+    margin-bottom:18px;
+  }
+  .done-list div{ font-size:14px; font-weight:700; color:var(--blue-dark); padding:4px 0; }
+  .change-link{
+    display:inline-block;
+    font-size:14px;
+    font-weight:700;
+    color:var(--blue);
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:10px 16px;
+    min-height:44px;
+  }
+
+  .host-link-wrap{ text-align:center; margin-top:6px; }
+  .host-link{
+    display:inline-block;
+    font-size:12px;
+    color:var(--sub);
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:10px 16px;
+    min-height:44px;
+    font-family:inherit;
+  }
+
+  footer{
+    width:100%;
+    text-align:center;
+    font-size:12px;
+    color:var(--sub);
+    padding:10px 12px 26px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="flow-nav">
+    <a href="index.html" class="flow-tab">① Live Poll</a>
+    <span class="flow-arrow">→</span>
+    <a href="breakout.html" class="flow-tab">② Breakout Canvas</a>
+    <span class="flow-arrow">→</span>
+    <a href="clustering.html" class="flow-tab">③ Clustering Matrix</a>
+    <span class="flow-arrow">→</span>
+    <a href="prioritize.html" class="flow-tab active">④ Prioritization</a>
+  </div>
+
+  <div class="header">
+    <span class="badge">PRIORITIZATION</span>
+    <h1>Top 2~3 액션 투표</h1>
+    <p>QUICK WINS·STRATEGIC MOVES에 올라온 후보 중<br/>가장 중요하다고 생각하는 행동에 3표를 나눠 투표하세요</p>
+  </div>
+
+  <div class="content">
+    <div class="vote-hint" id="voteHint">최대 3개까지 선택할 수 있어요 (0/3 선택)</div>
+
+    <div class="empty-hint" id="emptyHint" style="display:none;">
+      아직 후보 액션이 준비되지 않았어요.<br/>진행자가 후보를 등록하면 여기에 표시됩니다.
+    </div>
+
+    <div class="candidate-list" id="candidateList"></div>
+
+    <div class="submit-wrap" id="submitWrap">
+      <button class="submit-btn" id="submitBtn" disabled>투표 제출</button>
+      <div class="status" id="status"></div>
+    </div>
+
+    <div class="done-card" id="doneCard">
+      <div class="check">✓</div>
+      <h2>투표가 제출되었습니다</h2>
+      <div class="done-list" id="doneList"></div>
+      <button class="change-link" id="changeLink">다시 선택하기</button>
+    </div>
+  </div>
+
+  <div class="host-link-wrap">
+    <button class="host-link" id="hostLink">진행자 화면 열기</button>
+  </div>
+
+  <footer>© 2026 Joanna Lee. All rights reserved.</footer>
+
+<script>
+(function(){
+  var TOKEN_KEY = 'za2030_deepdive_prioritize_token';
+  var token = localStorage.getItem(TOKEN_KEY);
+  if(!token){
+    token = 'p_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,10);
+    localStorage.setItem(TOKEN_KEY, token);
+  }
+
+  var VOTED_KEY = 'za2030_deepdive_prioritize_myvote';
+  var VOTED_RESET_KEY = 'za2030_deepdive_prioritize_myvote_resetat';
+
+  var candidateList = document.getElementById('candidateList');
+  var emptyHint = document.getElementById('emptyHint');
+  var voteHint = document.getElementById('voteHint');
+  var submitWrap = document.getElementById('submitWrap');
+  var submitBtn = document.getElementById('submitBtn');
+  var statusEl = document.getElementById('status');
+  var doneCard = document.getElementById('doneCard');
+  var doneList = document.getElementById('doneList');
+  var changeLink = document.getElementById('changeLink');
+
+  var candidates = [];
+  var selected = [];   // 선택된 candidate id 배열(최대 3개)
+  var submitted = false;
+  var pollTimer = null;
+
+  function showDone(finalIds){
+    var textById = {};
+    candidates.forEach(function(c){ textById[c.id] = c.text; });
+    doneList.innerHTML = finalIds.map(function(id){
+      return '<div>✓ ' + escapeHtml(textById[id] || '') + '</div>';
+    }).join('') || '<div style="color:var(--sub);font-weight:600;">선택한 항목이 없어요</div>';
+    candidateList.classList.add('hide');
+    submitWrap.classList.add('hide');
+    voteHint.style.display = 'none';
+    doneCard.classList.add('show');
+    stopPolling();
+  }
+
+  function showVoting(){
+    candidateList.classList.remove('hide');
+    submitWrap.classList.remove('hide');
+    voteHint.style.display = '';
+    doneCard.classList.remove('show');
+    statusEl.textContent = '';
+    startPolling();
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function renderCandidates(){
+    if(candidates.length === 0){
+      emptyHint.style.display = '';
+      candidateList.style.display = 'none';
+      voteHint.style.display = 'none';
+      submitWrap.style.display = 'none';
+      return;
+    }
+    emptyHint.style.display = 'none';
+    candidateList.style.display = '';
+    voteHint.style.display = submitted ? 'none' : '';
+    submitWrap.style.display = submitted ? 'none' : '';
+
+    candidateList.innerHTML = candidates.map(function(c){
+      var isSel = selected.indexOf(c.id) !== -1;
+      return '<button type="button" class="candidate-btn' + (isSel ? ' selected' : '') + '" data-id="' + c.id + '">' +
+        '<span class="chk">' + (isSel ? '✓' : '') + '</span>' +
+        '<span>' + escapeHtml(c.text) + '</span>' +
+        '</button>';
+    }).join('');
+
+    candidateList.querySelectorAll('.candidate-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.getAttribute('data-id');
+        var idx = selected.indexOf(id);
+        if(idx !== -1){
+          selected.splice(idx, 1);
+        } else {
+          if(selected.length >= 3){
+            statusEl.textContent = '최대 3개까지 선택할 수 있어요';
+            return;
+          }
+          selected.push(id);
+        }
+        statusEl.textContent = '';
+        updateHint();
+        renderCandidates();
+      });
+    });
+  }
+
+  function updateHint(){
+    voteHint.textContent = '최대 3개까지 선택할 수 있어요 (' + selected.length + '/3 선택)';
+    submitBtn.disabled = selected.length === 0;
+  }
+
+  function fetchCandidates(cb){
+    fetch('/api/prioritize').then(function(r){ return r.json(); }).then(function(data){
+      candidates = (data && data.candidates) || [];
+      // 더 이상 존재하지 않는 후보는 선택 목록에서 제거
+      var validIds = candidates.map(function(c){ return c.id; });
+      selected = selected.filter(function(id){ return validIds.indexOf(id) !== -1; });
+      updateHint();
+      renderCandidates();
+      if(cb) cb(data);
+    }).catch(function(){ /* 다음 폴링에서 재시도 */ });
+  }
+
+  function startPolling(){
+    fetchCandidates();
+    if(pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(function(){ if(!submitted) fetchCandidates(); }, 3000);
+  }
+  function stopPolling(){
+    if(pollTimer) clearInterval(pollTimer);
+    pollTimer = null;
+  }
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden){ stopPolling(); } else if(!submitted){ startPolling(); }
+  });
+
+  function submitVote(){
+    if(selected.length === 0) return;
+    submitBtn.disabled = true;
+    statusEl.textContent = '제출 중...';
+    fetch('/api/prioritize', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ token: token, candidateIds: selected })
+    }).then(function(r){ return r.json(); }).then(function(data){
+      if(data && data.ok){
+        submitted = true;
+        localStorage.setItem(VOTED_KEY, JSON.stringify(data.myVote || selected));
+        localStorage.setItem(VOTED_RESET_KEY, data.resetAt || '');
+        showDone(data.myVote || selected);
+      } else {
+        statusEl.textContent = '제출에 실패했어요. 다시 시도해주세요.';
+        submitBtn.disabled = false;
+      }
+    }).catch(function(){
+      statusEl.textContent = '네트워크 오류. 다시 시도해주세요.';
+      submitBtn.disabled = false;
+    });
+  }
+
+  submitBtn.addEventListener('click', submitVote);
+  changeLink.addEventListener('click', function(){
+    submitted = false;
+    showVoting();
+  });
+
+  // 로컬에 "이미 제출함" 기록이 있어도, 그 사이 관리자가 전체 초기화를 했다면 서버의 resetAt이
+  // 달라져 있으므로 그걸 확인한 뒤에만 완료 화면을 보여줌(라이브 폴에서 겪은 캐시 버그를 같은 방식으로 예방)
+  var savedVoteRaw = localStorage.getItem(VOTED_KEY);
+  var savedResetAt = localStorage.getItem(VOTED_RESET_KEY);
+
+  fetchCandidates(function(data){
+    var serverResetAt = data && data.resetAt ? data.resetAt : null;
+    if(savedVoteRaw){
+      if(serverResetAt && serverResetAt !== savedResetAt){
+        localStorage.removeItem(VOTED_KEY);
+        localStorage.removeItem(VOTED_RESET_KEY);
+        showVoting();
+      } else {
+        try {
+          var savedVote = JSON.parse(savedVoteRaw) || [];
+        } catch(e){ savedVote = []; }
+        submitted = true;
+        showDone(savedVote);
+      }
+    } else {
+      showVoting();
+    }
+  });
+
+  var HOST_PASSWORD = '1234';
+  document.getElementById('hostLink').addEventListener('click', function(){
+    var pw = window.prompt('진행자 비밀번호를 입력하세요');
+    if(pw === null) return;
+    if(pw === HOST_PASSWORD){
+      window.open('prioritize-host.html', '_blank');
+    } else {
+      alert('비밀번호가 올바르지 않습니다.');
+    }
+  });
+})();
+</script>
+</body>
+</html>
