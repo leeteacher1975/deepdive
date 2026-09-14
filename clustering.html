@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>Clustering Matrix · ZA2030 딥다이브세션</title>
+<link rel="stylesheet" as="style" crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<style>
+  :root{
+    --blue-dark:#1D4E89;
+    --blue:#2D6CDF;
+    --ink:#14213D;
+    --sub:#5B6B85;
+    --bg:#EEF3FB;
+    --card:#FFFFFF;
+    --line:#DCE5F5;
+    --q-quickwins:#2FA365;
+    --q-strategic:#1D4E89;
+    --q-park:#94A3B8;
+    --q-watch:#E5822B;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Pretendard","-apple-system",BlinkMacSystemFont,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .flow-nav{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:12px 14px;
+    background:#fff;
+    border-bottom:1px solid var(--line);
+    flex-wrap:wrap;
+  }
+  .flow-tab{
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--sub);
+    text-decoration:none;
+    padding:7px 12px;
+    border-radius:999px;
+    background:#F1F5FC;
+    white-space:nowrap;
+  }
+  .flow-tab.active{ background:var(--blue-dark); color:#fff; }
+  .flow-arrow{ color:var(--sub); font-size:12.5px; }
+
+  .header{
+    width:100%;
+    background:linear-gradient(135deg,var(--blue-dark),var(--blue));
+    color:#fff;
+    padding:24px 20px 28px;
+    text-align:center;
+  }
+  .header .badge{
+    display:inline-block;
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:2px;
+    background:rgba(255,255,255,0.18);
+    padding:6px 14px;
+    border-radius:999px;
+    margin-bottom:10px;
+  }
+  .header h1{ margin:0 0 6px; font-size:clamp(18px,3vw,23px); font-weight:800; }
+  .header p{ margin:0; font-size:13.5px; opacity:0.9; }
+
+  .content{
+    width:100%;
+    max-width:480px;
+    padding:22px 18px 40px;
+    flex:1;
+  }
+
+  .input-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:18px;
+    margin-bottom:16px;
+    box-shadow:0 6px 18px rgba(29,78,137,0.08);
+  }
+  .input-card label{
+    display:block;
+    font-size:13px;
+    font-weight:700;
+    color:var(--sub);
+    margin-bottom:8px;
+  }
+  .input-card input{
+    width:100%;
+    font-family:inherit;
+    font-size:16px;
+    padding:12px 14px;
+    border:2px solid var(--line);
+    border-radius:12px;
+    min-height:48px;
+  }
+  .input-card input:focus{ outline:none; border-color:var(--blue); }
+  .char-count{ text-align:right; font-size:11.5px; color:var(--sub); margin-top:4px; }
+
+  .axis-hint{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    font-size:11px;
+    font-weight:700;
+    color:var(--sub);
+    margin-bottom:6px;
+    padding:0 2px;
+  }
+  .axis-hint span:last-child{ text-align:right; }
+
+  .quad-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .quad-btn{
+    font-family:inherit;
+    border:none;
+    border-radius:16px;
+    padding:18px 10px;
+    min-height:88px;
+    color:#fff;
+    font-weight:800;
+    cursor:pointer;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+    transition:transform .12s ease;
+  }
+  .quad-btn:active{ transform:scale(0.96); }
+  .quad-btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  .quad-btn .t{ font-size:14px; }
+  .quad-btn .s{ font-size:11px; font-weight:600; opacity:0.9; }
+  .quad-btn[data-q="quickwins"]{ background:var(--q-quickwins); }
+  .quad-btn[data-q="strategic"]{ background:var(--q-strategic); }
+  .quad-btn[data-q="park"]{ background:var(--q-park); }
+  .quad-btn[data-q="watch"]{ background:var(--q-watch); }
+
+  .side-label{
+    writing-mode:vertical-rl;
+    text-orientation:mixed;
+  }
+
+  .toast{
+    text-align:center;
+    font-size:13px;
+    color:var(--blue-dark);
+    font-weight:700;
+    margin-top:14px;
+    min-height:18px;
+  }
+  .counter{
+    text-align:center;
+    font-size:12px;
+    color:var(--sub);
+    margin-top:6px;
+  }
+
+  footer{
+    width:100%;
+    text-align:center;
+    font-size:12px;
+    color:var(--sub);
+    padding:10px 12px 26px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="flow-nav">
+    <a href="index.html" class="flow-tab">① Live Poll</a>
+    <span class="flow-arrow">→</span>
+    <a href="breakout.html" class="flow-tab">② Breakout Canvas</a>
+    <span class="flow-arrow">→</span>
+    <a href="clustering.html" class="flow-tab active">③ Clustering Matrix</a>
+  </div>
+
+  <div class="header">
+    <span class="badge">CLUSTERING MATRIX</span>
+    <h1>발표를 들으며 떠오른 키워드를<br/>매트릭스 위에 놓아보세요</h1>
+    <p>키워드를 적고, 어울리는 칸을 탭하면 바로 화면에 올라갑니다</p>
+  </div>
+
+  <div class="content">
+    <div class="input-card">
+      <label for="keywordInput">키워드 (최대 40자)</label>
+      <input id="keywordInput" type="text" maxlength="40" placeholder="예: 고객 피드백 루프" />
+      <div class="char-count" id="charCount">0/40</div>
+    </div>
+
+    <div class="axis-hint">
+      <span>← LOW EFFORT</span>
+      <span>HIGH EFFORT →</span>
+    </div>
+    <div class="quad-grid">
+      <button class="quad-btn" data-q="quickwins">
+        <span class="t">① QUICK WINS</span>
+        <span class="s">높은 영향 · 낮은 노력</span>
+      </button>
+      <button class="quad-btn" data-q="strategic">
+        <span class="t">② STRATEGIC MOVES</span>
+        <span class="s">높은 영향 · 높은 노력</span>
+      </button>
+      <button class="quad-btn" data-q="park">
+        <span class="t">③ PARK</span>
+        <span class="s">낮은 영향 · 낮은 노력</span>
+      </button>
+      <button class="quad-btn" data-q="watch">
+        <span class="t">④ WATCH</span>
+        <span class="s">낮은 영향 · 높은 노력</span>
+      </button>
+    </div>
+
+    <div class="toast" id="toast"></div>
+    <div class="counter" id="counter"></div>
+  </div>
+
+  <footer>© 2026 Joanna Lee. All rights reserved.</footer>
+
+<script>
+(function(){
+  var input = document.getElementById('keywordInput');
+  var charCount = document.getElementById('charCount');
+  var toast = document.getElementById('toast');
+  var counter = document.getElementById('counter');
+  var buttons = document.querySelectorAll('.quad-btn');
+
+  var COUNT_KEY = 'za2030_deepdive_clustering_count';
+  var submittedCount = Number(localStorage.getItem(COUNT_KEY) || '0');
+
+  var LABELS = {
+    quickwins: 'QUICK WINS',
+    strategic: 'STRATEGIC MOVES',
+    park: 'PARK',
+    watch: 'WATCH'
+  };
+
+  function updateCounter(){
+    counter.textContent = submittedCount > 0 ? ('지금까지 ' + submittedCount + '개 제출했어요') : '';
+  }
+  updateCounter();
+
+  input.addEventListener('input', function(){
+    charCount.textContent = input.value.length + '/40';
+  });
+
+  function setBusy(busy){
+    buttons.forEach(function(b){ b.disabled = busy; });
+  }
+
+  function submit(quadrant){
+    var keyword = input.value.trim();
+    if(!keyword){
+      toast.textContent = '먼저 키워드를 입력해주세요';
+      input.focus();
+      return;
+    }
+    setBusy(true);
+    toast.textContent = '추가하는 중...';
+    fetch('/api/clustering', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ keyword: keyword, quadrant: quadrant })
+    }).then(function(r){ return r.json(); }).then(function(data){
+      setBusy(false);
+      if(data && data.ok){
+        toast.textContent = '"' + keyword + '" 을(를) ' + LABELS[quadrant] + ' 에 추가했어요';
+        input.value = '';
+        charCount.textContent = '0/40';
+        submittedCount += 1;
+        localStorage.setItem(COUNT_KEY, String(submittedCount));
+        updateCounter();
+        input.focus();
+      } else {
+        toast.textContent = '추가에 실패했어요. 다시 시도해주세요.';
+      }
+    }).catch(function(){
+      setBusy(false);
+      toast.textContent = '네트워크 오류. 다시 시도해주세요.';
+    });
+  }
+
+  buttons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      submit(btn.getAttribute('data-q'));
+    });
+  });
+})();
+</script>
+</body>
+</html>
