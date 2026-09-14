@@ -326,7 +326,7 @@
     var pw = window.prompt('진행자 비밀번호를 입력하세요');
     if(pw === null) return;
     if(pw === HOST_PASSWORD){
-      window.location.href = 'clustering-host.html';
+      window.open('clustering-host.html', '_blank');
     } else {
       alert('비밀번호가 올바르지 않습니다.');
     }
