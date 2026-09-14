@@ -24,6 +24,28 @@
     color:var(--ink);
     min-height:100vh;
   }
+  .flow-nav{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    padding:12px 14px;
+    background:#fff;
+    border-bottom:1px solid var(--line);
+    flex-wrap:wrap;
+  }
+  .flow-tab{
+    font-size:13px;
+    font-weight:700;
+    color:var(--sub);
+    text-decoration:none;
+    padding:7px 14px;
+    border-radius:999px;
+    background:#F1F5FC;
+  }
+  .flow-tab.active{ background:var(--blue-dark); color:#fff; }
+  .flow-arrow{ color:var(--sub); font-size:13px; }
+
   .header{
     background:linear-gradient(135deg,var(--blue-dark),var(--blue));
     color:#fff;
@@ -172,6 +194,12 @@
 </style>
 </head>
 <body>
+
+  <div class="flow-nav">
+    <a href="host.html" class="flow-tab active">① Live Poll</a>
+    <span class="flow-arrow">→</span>
+    <a href="breakout.html?tab=together" class="flow-tab">② Breakout Canvas</a>
+  </div>
 
   <div class="header">
     <span class="badge">LIVE POLL · 진행자 화면</span>

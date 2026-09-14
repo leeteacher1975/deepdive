@@ -173,6 +173,29 @@
     padding:18px 12px 26px;
   }
 
+  .flow-nav{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    padding:12px 14px;
+    background:#fff;
+    border-bottom:1px solid var(--line);
+    flex-wrap:wrap;
+  }
+  .flow-tab{
+    font-size:13px;
+    font-weight:700;
+    color:var(--sub);
+    text-decoration:none;
+    padding:7px 14px;
+    border-radius:999px;
+    background:#F1F5FC;
+  }
+  .flow-tab.active{ background:var(--blue-dark); color:#fff; }
+  .flow-arrow{ color:var(--sub); font-size:13px; }
+
   @media (max-width:375px){
     .header{ padding:22px 14px 26px; border-radius:0 0 20px 20px; }
     .header h1{ font-size:19px; }
@@ -183,6 +206,12 @@
 </style>
 </head>
 <body>
+
+  <div class="flow-nav">
+    <a href="index.html" class="flow-tab active">① Live Poll</a>
+    <span class="flow-arrow">→</span>
+    <a href="breakout.html" class="flow-tab">② Breakout Canvas</a>
+  </div>
 
   <div class="header">
     <span class="badge">LIVE POLL</span>

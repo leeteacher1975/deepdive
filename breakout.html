@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Breakout Canvas · ZA2030 딥다이브세션</title>
+<link rel="stylesheet" as="style" crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<style>
+  :root{
+    --blue-dark:#1D4E89;
+    --blue:#2D6CDF;
+    --ink:#14213D;
+    --sub:#5B6B85;
+    --bg:#EEF3FB;
+    --card:#FFFFFF;
+    --line:#DCE5F5;
+    --c-customer:#2D6CDF;
+    --c-speed:#E5822B;
+    --c-global:#2FA365;
+    --c-hpt:#8B5CF6;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Pretendard","-apple-system",BlinkMacSystemFont,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    min-height:100vh;
+  }
+
+  .flow-nav{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    padding:12px 14px;
+    background:#fff;
+    border-bottom:1px solid var(--line);
+    flex-wrap:wrap;
+  }
+  .flow-tab{
+    font-size:13px;
+    font-weight:700;
+    color:var(--sub);
+    text-decoration:none;
+    padding:7px 14px;
+    border-radius:999px;
+    background:#F1F5FC;
+  }
+  .flow-tab.active{ background:var(--blue-dark); color:#fff; }
+  .flow-arrow{ color:var(--sub); font-size:13px; }
+
+  .header{
+    background:linear-gradient(135deg,var(--blue-dark),var(--blue));
+    color:#fff;
+    padding:26px 20px 30px;
+    text-align:center;
+  }
+  .header .badge{
+    display:inline-block;
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:2px;
+    background:rgba(255,255,255,0.18);
+    padding:6px 14px;
+    border-radius:999px;
+    margin-bottom:10px;
+  }
+  .header h1{ margin:0 0 6px; font-size:clamp(19px,3vw,26px); font-weight:800; }
+  .header p{ margin:0; font-size:14px; opacity:0.9; }
+
+  .tabbar{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    padding:16px 14px 0;
+  }
+  .tabbar button{
+    font-family:inherit;
+    font-size:14px;
+    font-weight:700;
+    padding:10px 18px;
+    min-height:44px;
+    border-radius:12px 12px 0 0;
+    border:1px solid var(--line);
+    border-bottom:none;
+    background:#F1F5FC;
+    color:var(--sub);
+    cursor:pointer;
+  }
+  .tabbar button.active{ background:var(--card); color:var(--blue-dark); }
+
+  .panel{
+    max-width:1020px;
+    margin:0 auto;
+    padding:20px 18px 50px;
+  }
+
+  /* 작성하기 */
+  .element-picker{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    margin-bottom:20px;
+  }
+  @media (max-width:700px){
+    .element-picker{ grid-template-columns:repeat(2,1fr); }
+  }
+  .element-btn{
+    font-family:inherit;
+    font-size:14px;
+    font-weight:800;
+    padding:14px 10px;
+    min-height:56px;
+    border-radius:14px;
+    border:2px solid var(--line);
+    background:#fff;
+    color:var(--el-color, var(--blue-dark));
+    cursor:pointer;
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .element-btn:active{ transform:scale(0.97); }
+  .element-btn.selected{
+    background:var(--el-color, var(--blue-dark));
+    color:#fff;
+    box-shadow:0 6px 16px rgba(0,0,0,0.15);
+  }
+
+  .empty-hint{
+    text-align:center;
+    color:var(--sub);
+    font-size:14px;
+    padding:30px 10px;
+  }
+
+  .canvas{ display:none; }
+  .canvas.show{ display:block; }
+
+  .mission{
+    background:#fff;
+    border-radius:18px;
+    border:1px solid var(--line);
+    border-left:6px solid var(--el-color, var(--blue-dark));
+    padding:18px 22px;
+    font-size:16px;
+    font-weight:700;
+    line-height:1.6;
+    margin-bottom:18px;
+  }
+  .mission b{ color:var(--el-color, var(--blue-dark)); }
+
+  .quad-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  @media (max-width:700px){
+    .quad-grid{ grid-template-columns:1fr; }
+  }
+  .quad-card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-left:5px solid var(--el-color, var(--blue-dark));
+    border-radius:14px;
+    padding:14px 16px;
+  }
+  .quad-card .quad-title{ font-size:13px; font-weight:800; color:var(--el-color, var(--blue-dark)); margin-bottom:2px; }
+  .quad-card .quad-q{ font-size:12.5px; color:var(--sub); margin-bottom:8px; }
+  .quad-card textarea{
+    width:100%;
+    min-height:90px;
+    resize:vertical;
+    font-family:inherit;
+    font-size:14px;
+    line-height:1.5;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px 12px;
+    color:var(--ink);
+  }
+  .quad-card textarea:focus{ outline:2px solid var(--el-color, var(--blue)); outline-offset:1px; }
+
+  .save-status{
+    text-align:center;
+    font-size:12.5px;
+    color:var(--sub);
+    margin-top:14px;
+    min-height:16px;
+  }
+
+  /* 함께 보기 */
+  .together-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:14px;
+  }
+  @media (max-width:900px){
+    .together-grid{ grid-template-columns:repeat(2,1fr); }
+  }
+  @media (max-width:480px){
+    .together-grid{ grid-template-columns:1fr; }
+  }
+  .together-col{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:16px;
+    overflow:hidden;
+  }
+  .together-col .col-head{
+    padding:12px 14px;
+    color:#fff;
+    font-weight:800;
+    font-size:13px;
+    background:var(--el-color, var(--blue-dark));
+  }
+  .together-col .col-body{ padding:12px 14px; }
+  .together-col .mini-q{ font-size:11.5px; font-weight:800; color:var(--el-color, var(--blue-dark)); margin:10px 0 2px; }
+  .together-col .mini-q:first-child{ margin-top:0; }
+  .together-col .mini-v{ font-size:13px; line-height:1.5; color:var(--ink); white-space:pre-wrap; word-break:break-word; }
+  .together-col .mini-v.empty{ color:var(--sub); font-style:italic; }
+  .together-col .updated{ font-size:11px; color:var(--sub); margin-top:10px; text-align:right; }
+
+  footer{
+    text-align:center;
+    font-size:12px;
+    color:var(--sub);
+    padding:10px 12px 30px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="flow-nav">
+    <a href="index.html" class="flow-tab">① Live Poll</a>
+    <span class="flow-arrow">→</span>
+    <a href="breakout.html" class="flow-tab active">② Breakout Canvas</a>
+  </div>
+
+  <div class="header">
+    <span class="badge">BREAKOUT CANVAS</span>
+    <h1>4개 그룹 · 1개 그룹당 1개 Element</h1>
+    <p>"이 요소를 우리 팀의 실제 업무에서 어떻게 살아 있게 만들 것인가?"</p>
+  </div>
+
+  <div class="tabbar">
+    <button id="tabWriteBtn" class="active">작성하기</button>
+    <button id="tabTogetherBtn">함께 보기</button>
+  </div>
+
+  <div class="panel">
+
+    <div id="panelWrite">
+      <div class="element-picker" id="elementPicker"></div>
+      <div class="empty-hint" id="emptyHint">위에서 우리 그룹이 맡은 요소를 선택하세요</div>
+      <div class="canvas" id="canvas">
+        <div class="mission" id="missionText"></div>
+        <div class="quad-grid" id="quadGrid"></div>
+        <div class="save-status" id="saveStatus"></div>
+      </div>
+    </div>
+
+    <div id="panelTogether" style="display:none;">
+      <div class="together-grid" id="togetherGrid"></div>
+      <div style="text-align:center;margin-top:18px;">
+        <button id="resetBtn" style="font-size:12px;color:var(--sub);background:none;border:none;cursor:pointer;padding:10px;text-decoration:underline;">관리자 · 전체 초기화</button>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>© 2026 Joanna Lee. All rights reserved.</footer>
+
+<script>
+(function(){
+  var ELEMENTS = [
+    { id:'customer', label:'Customer at the Core', color:'var(--c-customer)' },
+    { id:'speed', label:'Speed', color:'var(--c-speed)' },
+    { id:'global', label:'Truly Global', color:'var(--c-global)' },
+    { id:'hpt', label:'High-Performance Team ZEISS', color:'var(--c-hpt)' }
+  ];
+  var QUADS = [
+    { key:'meaning', title:'A. MEANING', q:'우리 업무에서 이 요소는 무엇을 의미하는가?' },
+    { key:'action', title:'B. ALREADY IN ACTION', q:'이미 잘하고 있는 구체적 사례는?' },
+    { key:'change', title:'C. DO DIFFERENTLY', q:'더 잘 하기 위해 무엇을 다르게 할까?' },
+    { key:'evidence', title:'D. EVIDENCE / EXAMPLE', q:'고객·프로세스·협업·의사결정 등 실제 장면/사례' }
+  ];
+
+  var elementPicker = document.getElementById('elementPicker');
+  var emptyHint = document.getElementById('emptyHint');
+  var canvasEl = document.getElementById('canvas');
+  var missionText = document.getElementById('missionText');
+  var quadGrid = document.getElementById('quadGrid');
+  var saveStatus = document.getElementById('saveStatus');
+  var togetherGrid = document.getElementById('togetherGrid');
+
+  var tabWriteBtn = document.getElementById('tabWriteBtn');
+  var tabTogetherBtn = document.getElementById('tabTogetherBtn');
+  var panelWrite = document.getElementById('panelWrite');
+  var panelTogether = document.getElementById('panelTogether');
+
+  var LAST_ELEMENT_KEY = 'za2030_deepdive_breakout_element';
+  var selectedId = localStorage.getItem(LAST_ELEMENT_KEY) || null;
+  var saveTimer = null;
+  var pollTimer = null;
+  var currentTab = 'write';
+
+  function findElement(id){
+    for(var i=0;i<ELEMENTS.length;i++){ if(ELEMENTS[i].id === id) return ELEMENTS[i]; }
+    return null;
+  }
+
+  // ---- 작성하기: 요소 선택 버튼 ----
+  ELEMENTS.forEach(function(el){
+    var btn = document.createElement('button');
+    btn.className = 'element-btn';
+    btn.style.setProperty('--el-color', el.color);
+    btn.textContent = el.label;
+    btn.dataset.id = el.id;
+    btn.addEventListener('click', function(){ selectElement(el.id); });
+    elementPicker.appendChild(btn);
+  });
+
+  function refreshPickerHighlight(){
+    var btns = elementPicker.querySelectorAll('.element-btn');
+    btns.forEach(function(b){ b.classList.toggle('selected', b.dataset.id === selectedId); });
+  }
+
+  function buildCanvas(el){
+    canvasEl.style.setProperty('--el-color', el.color);
+    missionText.innerHTML = '“<b>' + el.label + '</b> 이 요소를 우리 팀의 실제 업무에서 어떻게 살아 있게 만들 것인가?”';
+    quadGrid.innerHTML = '';
+    QUADS.forEach(function(q){
+      var card = document.createElement('div');
+      card.className = 'quad-card';
+      card.innerHTML =
+        '<div class="quad-title">' + q.title + '</div>' +
+        '<div class="quad-q">' + q.q + '</div>' +
+        '<textarea data-key="' + q.key + '" placeholder="여기에 작성하세요"></textarea>';
+      quadGrid.appendChild(card);
+    });
+    quadGrid.querySelectorAll('textarea').forEach(function(ta){
+      ta.addEventListener('input', function(){
+        saveStatus.textContent = '입력 중...';
+        if(saveTimer) clearTimeout(saveTimer);
+        saveTimer = setTimeout(saveCanvas, 1200);
+      });
+    });
+  }
+
+  function fillCanvas(data){
+    QUADS.forEach(function(q){
+      var ta = quadGrid.querySelector('textarea[data-key="'+q.key+'"]');
+      if(ta) ta.value = (data && data[q.key]) || '';
+    });
+  }
+
+  function selectElement(id){
+    selectedId = id;
+    localStorage.setItem(LAST_ELEMENT_KEY, id);
+    refreshPickerHighlight();
+    var el = findElement(id);
+    buildCanvas(el);
+    emptyHint.style.display = 'none';
+    canvasEl.classList.add('show');
+    saveStatus.textContent = '불러오는 중...';
+    fetch('/api/breakout').then(function(r){ return r.json(); }).then(function(data){
+      var elements = (data && data.elements) || {};
+      fillCanvas(elements[id]);
+      saveStatus.textContent = elements[id] && elements[id].updatedAt ? '저장됨' : '';
+    }).catch(function(){ saveStatus.textContent = ''; });
+  }
+
+  function saveCanvas(){
+    if(!selectedId) return;
+    var payload = { element: selectedId };
+    QUADS.forEach(function(q){
+      var ta = quadGrid.querySelector('textarea[data-key="'+q.key+'"]');
+      payload[q.key] = ta ? ta.value : '';
+    });
+    saveStatus.textContent = '저장 중...';
+    fetch('/api/breakout', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify(payload)
+    }).then(function(r){ return r.json(); }).then(function(data){
+      saveStatus.textContent = data && data.ok ? '저장됨' : '저장 실패 — 다시 시도해주세요';
+    }).catch(function(){ saveStatus.textContent = '네트워크 오류 — 다시 시도해주세요'; });
+  }
+
+  if(selectedId){ selectElement(selectedId); }
+
+  // ---- 함께 보기 ----
+  function timeAgo(iso){
+    if(!iso) return '';
+    var diffMs = Date.now() - new Date(iso).getTime();
+    var min = Math.floor(diffMs / 60000);
+    if(min < 1) return '방금 업데이트';
+    if(min < 60) return min + '분 전 업데이트';
+    var hr = Math.floor(min/60);
+    return hr + '시간 전 업데이트';
+  }
+
+  function renderTogether(elements){
+    togetherGrid.innerHTML = '';
+    ELEMENTS.forEach(function(el){
+      var data = (elements && elements[el.id]) || {};
+      var col = document.createElement('div');
+      col.className = 'together-col';
+      col.style.setProperty('--el-color', el.color);
+      var body = QUADS.map(function(q){
+        var v = data[q.key];
+        return '<div class="mini-q">' + q.title + '</div>' +
+          '<div class="mini-v' + (v ? '' : ' empty') + '">' + (v ? escapeHtml(v) : '아직 작성 전') + '</div>';
+      }).join('');
+      col.innerHTML =
+        '<div class="col-head">' + el.label + '</div>' +
+        '<div class="col-body">' + body +
+        '<div class="updated">' + timeAgo(data.updatedAt) + '</div></div>';
+      togetherGrid.appendChild(col);
+    });
+  }
+
+  function escapeHtml(s){
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function fetchTogether(){
+    fetch('/api/breakout').then(function(r){ return r.json(); }).then(function(data){
+      if(data && data.elements) renderTogether(data.elements);
+    }).catch(function(){ /* 다음 폴링에서 재시도 */ });
+  }
+
+  function startPolling(){
+    fetchTogether();
+    if(pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(fetchTogether, 2000);
+  }
+  function stopPolling(){
+    if(pollTimer) clearInterval(pollTimer);
+    pollTimer = null;
+  }
+
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden){ stopPolling(); }
+    else if(currentTab === 'together'){ startPolling(); }
+  });
+
+  // ---- 탭 전환 ----
+  function showTab(tab){
+    currentTab = tab;
+    tabWriteBtn.classList.toggle('active', tab === 'write');
+    tabTogetherBtn.classList.toggle('active', tab === 'together');
+    panelWrite.style.display = tab === 'write' ? '' : 'none';
+    panelTogether.style.display = tab === 'together' ? '' : 'none';
+    if(tab === 'together'){ startPolling(); } else { stopPolling(); }
+  }
+  tabWriteBtn.addEventListener('click', function(){ showTab('write'); });
+  tabTogetherBtn.addEventListener('click', function(){ showTab('together'); });
+
+  // URL에 ?tab=together 를 붙이면 함께 보기 화면으로 바로 진입 (발표 화면용)
+  var params = new URLSearchParams(window.location.search);
+  if(params.get('tab') === 'together'){ showTab('together'); }
+
+  document.getElementById('resetBtn').addEventListener('click', function(){
+    var pw = window.prompt('관리자 비밀번호를 입력하세요');
+    if(pw === null) return;
+    if(!window.confirm('4개 요소의 모든 캔버스 내용을 초기화할까요? 이 작업은 되돌릴 수 없습니다.')) return;
+    fetch('/api/breakout', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ action:'reset', password: pw })
+    }).then(function(r){ return r.json(); }).then(function(data){
+      if(data && data.error === 'unauthorized'){
+        alert('비밀번호가 올바르지 않습니다.');
+      } else if(data && data.elements){
+        renderTogether(data.elements);
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>
