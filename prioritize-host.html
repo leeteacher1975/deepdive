@@ -216,7 +216,8 @@
     line-height:2;
     margin-bottom:8px;
   }
-  .sentence-row input{
+  .sentence-row input,
+  .sentence-row select{
     font-family:inherit;
     font-size:14px;
     font-weight:700;
@@ -226,8 +227,10 @@
     padding:4px 2px;
     min-width:110px;
     flex:1;
+    background:#fff;
   }
-  .sentence-row input:focus{ outline:none; border-color:var(--blue); }
+  .sentence-row input:focus,
+  .sentence-row select:focus{ outline:none; border-color:var(--blue); }
   .fc-status{ font-size:11px; color:var(--sub); text-align:right; }
 
   .stat-line{
@@ -329,6 +332,8 @@
   var addInput = document.getElementById('addInput');
 
   var MAX_FINALIZED = 3;
+  // 결정 문장의 두 번째 빈칸("~을(를) 더 잘 살린다")은 자유 입력 대신 ZA2030 4대 아젠다 영역 중에서 선택
+  var AGENDA_ELEMENTS = ['Customer at the Core', 'Speed', 'Truly Global', 'High-Performance Team ZEISS'];
   var pollTimer = null;
   var lastData = null;
   var finalizeSaveTimers = {}; // candidateId+field -> timer
@@ -430,6 +435,10 @@
     finalizedList.innerHTML = finalized.map(function(f){
       var cand = candidates.find(function(c){ return c.id === f.candidateId; });
       var text = cand ? cand.text : '(삭제된 후보)';
+      var blank2Options = '<option value="">영역 선택</option>' + AGENDA_ELEMENTS.map(function(opt){
+        var sel = f.blank2 === opt ? ' selected' : '';
+        return '<option value="' + escapeHtml(opt) + '"' + sel + '>' + escapeHtml(opt) + '</option>';
+      }).join('');
       return '<div class="card finalize-card" style="box-shadow:none;padding:14px 16px;">' +
         '<div class="fc-head">' +
           '<span class="fc-title">✓ ' + escapeHtml(text) + '</span>' +
@@ -438,7 +447,7 @@
         '<div class="sentence-row">우리 팀은 ' +
           '<input type="text" maxlength="200" placeholder="예: 주간 회고" data-field="blank1" data-id="' + f.candidateId + '" value="' + escapeHtml(f.blank1 || '') + '" />' +
           '을(를) 통해 ' +
-          '<input type="text" maxlength="200" placeholder="예: 고객 대응 속도" data-field="blank2" data-id="' + f.candidateId + '" value="' + escapeHtml(f.blank2 || '') + '" />' +
+          '<select data-field="blank2" data-id="' + f.candidateId + '">' + blank2Options + '</select>' +
           '을(를) 더 잘 살린다.</div>' +
         '<div class="fc-status" data-status-id="' + f.candidateId + '">' + (f.updatedAt ? '저장됨' : '') + '</div>' +
       '</div>';
@@ -451,21 +460,23 @@
         });
       });
     });
-    finalizedList.querySelectorAll('input[data-field]').forEach(function(input){
-      input.addEventListener('input', function(){
-        var id = input.getAttribute('data-id');
-        var field = input.getAttribute('data-field');
+    finalizedList.querySelectorAll('input[data-field], select[data-field]').forEach(function(el){
+      var isSelect = el.tagName === 'SELECT';
+      el.addEventListener(isSelect ? 'change' : 'input', function(){
+        var id = el.getAttribute('data-id');
+        var field = el.getAttribute('data-field');
         var key = id + ':' + field;
         var statusEl = finalizedList.querySelector('[data-status-id="'+id+'"]');
-        if(statusEl) statusEl.textContent = '입력 중...';
+        if(statusEl) statusEl.textContent = isSelect ? '저장 중...' : '입력 중...';
         if(finalizeSaveTimers[key]) clearTimeout(finalizeSaveTimers[key]);
+        // 선택형(select)은 바로 저장, 텍스트 입력은 타이핑이 끝난 뒤 저장(디바운스)
         finalizeSaveTimers[key] = setTimeout(function(){
-          post({ action:'finalize_field', candidateId: id, field: field, value: input.value }).then(function(data){
+          post({ action:'finalize_field', candidateId: id, field: field, value: el.value }).then(function(data){
             var st = finalizedList.querySelector('[data-status-id="'+id+'"]');
             if(st) st.textContent = '저장됨';
             if(data && data.candidates) lastData = data; // 다음 폴링까지는 로컬 입력 유지, 전체 재렌더는 하지 않음
           });
-        }, 900);
+        }, isSelect ? 0 : 900);
       });
     });
   }
@@ -473,7 +484,8 @@
   function fetchState(){
     fetch('/api/prioritize').then(function(r){ return r.json(); }).then(function(data){
       // 입력 중인 필드가 있으면 전체 재렌더로 포커스가 끊기지 않도록, 포커스가 없는 경우에만 갱신
-      if(document.activeElement && document.activeElement.tagName === 'INPUT' && finalizedList.contains(document.activeElement)) return;
+      var activeTag = document.activeElement && document.activeElement.tagName;
+      if((activeTag === 'INPUT' || activeTag === 'SELECT') && finalizedList.contains(document.activeElement)) return;
       render(data);
     }).catch(function(){ /* 다음 폴링에서 재시도 */ });
   }
