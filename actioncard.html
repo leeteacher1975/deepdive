@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>Action Card · ZA2030 딥다이브세션</title>
+<link rel="stylesheet" as="style" crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<style>
+  :root{
+    --blue-dark:#1D4E89;
+    --blue:#2D6CDF;
+    --ink:#14213D;
+    --sub:#5B6B85;
+    --bg:#EEF3FB;
+    --card:#FFFFFF;
+    --line:#DCE5F5;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Pretendard","-apple-system",BlinkMacSystemFont,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .flow-nav{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    padding:12px 14px;
+    background:#fff;
+    border-bottom:1px solid var(--line);
+    flex-wrap:wrap;
+  }
+  .flow-tab{
+    font-size:12px;
+    font-weight:700;
+    color:var(--sub);
+    text-decoration:none;
+    padding:6px 11px;
+    border-radius:999px;
+    background:#F1F5FC;
+    white-space:nowrap;
+  }
+  .flow-tab.active{ background:var(--blue-dark); color:#fff; }
+  .flow-arrow{ color:var(--sub); font-size:12px; }
+
+  .header{
+    width:100%;
+    background:linear-gradient(135deg,var(--blue-dark),var(--blue));
+    color:#fff;
+    padding:26px 20px 30px;
+    text-align:center;
+  }
+  .header .badge{
+    display:inline-block;
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:2px;
+    background:rgba(255,255,255,0.18);
+    padding:6px 14px;
+    border-radius:999px;
+    margin-bottom:10px;
+  }
+  .header h1{ margin:0 0 6px; font-size:clamp(19px,3vw,24px); font-weight:800; }
+  .header p{ margin:0; font-size:13.5px; opacity:0.9; line-height:1.5; }
+
+  .content{
+    width:100%;
+    max-width:560px;
+    padding:22px 18px 40px;
+    flex:1;
+  }
+
+  .ref-card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-left:5px solid var(--blue-dark);
+    border-radius:14px;
+    padding:14px 16px;
+    margin-bottom:18px;
+  }
+  .ref-card .ref-title{ font-size:12px; font-weight:800; color:var(--blue-dark); margin-bottom:8px; }
+  .ref-card .ref-item{ font-size:13.5px; font-weight:700; color:var(--ink); padding:4px 0; line-height:1.5; }
+  .ref-card .ref-empty{ font-size:13px; color:var(--sub); font-style:italic; }
+
+  .field{ margin-bottom:16px; }
+  .field label{
+    display:block;
+    font-size:13px;
+    font-weight:800;
+    color:var(--blue-dark);
+    margin-bottom:6px;
+  }
+  .field .hint{ font-size:11.5px; color:var(--sub); font-weight:600; margin-bottom:6px; }
+  .field input, .field select, .field textarea{
+    width:100%;
+    font-family:inherit;
+    font-size:15px;
+    padding:11px 13px;
+    border:2px solid var(--line);
+    border-radius:12px;
+    color:var(--ink);
+    background:#fff;
+  }
+  .field textarea{ min-height:76px; resize:vertical; }
+  .field input:focus, .field select:focus, .field textarea:focus{ outline:none; border-color:var(--blue); }
+
+  .submit-btn{
+    width:100%;
+    font-family:inherit;
+    font-size:16px;
+    font-weight:800;
+    color:#fff;
+    background:var(--blue-dark);
+    border:none;
+    border-radius:14px;
+    padding:14px;
+    min-height:52px;
+    cursor:pointer;
+  }
+  .submit-btn:disabled{ opacity:0.5; cursor:not-allowed; }
+
+  .status{
+    text-align:center;
+    font-size:13px;
+    color:var(--sub);
+    margin-top:12px;
+    min-height:18px;
+  }
+  .status.ok{ color:var(--blue-dark); font-weight:700; }
+
+  .edit-note{
+    text-align:center;
+    font-size:12px;
+    color:var(--sub);
+    margin-top:6px;
+  }
+
+  .email-card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-left:5px solid #2FA365;
+    border-radius:14px;
+    padding:14px 16px;
+    margin-top:6px;
+  }
+  .email-card .email-title{ font-size:13px; font-weight:800; color:var(--blue-dark); margin-bottom:6px; }
+  .email-card .email-desc{ font-size:12.5px; color:var(--sub); margin-bottom:10px; line-height:1.5; }
+  .email-card input{
+    width:100%;
+    font-family:inherit;
+    font-size:15px;
+    padding:11px 13px;
+    border:2px solid var(--line);
+    border-radius:12px;
+    color:var(--ink);
+    background:#fff;
+    margin-bottom:10px;
+  }
+  .email-card input:focus{ outline:none; border-color:var(--blue); }
+  .email-btn{
+    width:100%;
+    font-family:inherit;
+    font-size:14.5px;
+    font-weight:800;
+    color:#fff;
+    background:#2FA365;
+    border:none;
+    border-radius:12px;
+    padding:12px;
+    min-height:46px;
+    cursor:pointer;
+  }
+  .email-note{ font-size:11px; color:var(--sub); margin-top:8px; text-align:center; line-height:1.5; }
+
+  .host-link-wrap{ text-align:center; margin-top:14px; }
+  .host-link{
+    display:inline-block;
+    font-size:12px;
+    color:var(--sub);
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:10px 16px;
+    min-height:44px;
+    font-family:inherit;
+  }
+
+  footer{
+    width:100%;
+    text-align:center;
+    font-size:12px;
+    color:var(--sub);
+    padding:10px 12px 26px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="flow-nav">
+    <a href="index.html" class="flow-tab">① Live Poll</a>
+    <span class="flow-arrow">→</span>
+    <a href="breakout.html" class="flow-tab">② Breakout Canvas</a>
+    <span class="flow-arrow">→</span>
+    <a href="clustering.html" class="flow-tab">③ Clustering Matrix</a>
+    <span class="flow-arrow">→</span>
+    <a href="prioritize.html" class="flow-tab">④ Prioritization</a>
+    <span class="flow-arrow">→</span>
+    <a href="actioncard.html" class="flow-tab active">⑤ Action Card</a>
+  </div>
+
+  <div class="header">
+    <span class="badge">ACTION CARD</span>
+    <h1>Owner &amp; First Timeline</h1>
+    <p>'좋은 아이디어'에서 끝나지 않도록<br/>나의 Action에 최소한의 실행정보를 붙여보세요</p>
+  </div>
+
+  <div class="content">
+    <div class="ref-card">
+      <div class="ref-title">우리 팀이 확정한 우선순위</div>
+      <div id="refList"><div class="ref-empty">아직 진행자가 확정한 우선순위가 없어요</div></div>
+    </div>
+
+    <form id="cardForm">
+      <div class="field">
+        <label for="prioritySelect">이 Action은 어떤 우선순위를 지원하나요?</label>
+        <select id="prioritySelect"></select>
+      </div>
+
+      <div class="field">
+        <label for="actionInput">ACTION</label>
+        <input id="actionInput" type="text" maxlength="200" placeholder="내가 실행할 구체적인 행동" required />
+      </div>
+
+      <div class="field">
+        <label for="whyInput">WHY / EXPECTED IMPACT</label>
+        <textarea id="whyInput" maxlength="300" placeholder="왜 이 행동이 필요한지, 기대되는 변화는 무엇인지"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="ownerInput">OWNER</label>
+        <div class="hint">개인 이름 또는 역할 단위로 명확하게 (예: 홍길동 / SSC IT팀 담당자)</div>
+        <input id="ownerInput" type="text" maxlength="100" placeholder="내 이름 또는 역할" required />
+      </div>
+
+      <div class="field">
+        <label for="firstStepInput">FIRST STEP</label>
+        <div class="hint">"회의를 잡는다"보다 한 단계 더 구체적으로</div>
+        <input id="firstStepInput" type="text" maxlength="300" placeholder="예: 팀 채널에 초안 공유하고 피드백 요청" />
+      </div>
+
+      <div class="field">
+        <label for="whenInput">WHEN</label>
+        <input id="whenInput" type="text" maxlength="100" placeholder="예: 9/22(화)까지" />
+      </div>
+
+      <button type="submit" class="submit-btn" id="submitBtn">제출</button>
+      <div class="status" id="status"></div>
+      <div class="edit-note">제출한 뒤에도 이 화면에서 언제든 다시 열어 수정할 수 있어요.</div>
+    </form>
+
+    <div class="email-card" id="emailCard" style="display:none;">
+      <div class="email-title">내 액션, 이메일로 받아보기</div>
+      <div class="email-desc">이번 세션에서 우리 팀이 확정한 우선순위와 내 액션카드 내용을 정리해서
+        메일로 보내드려요.</div>
+      <input id="emailAddrInput" type="email" placeholder="받을 이메일 주소 (본인)" />
+      <button type="button" class="email-btn" id="emailBtn">이메일로 보내기</button>
+      <div class="email-note">버튼을 누르면 내 메일 앱에 내용이 미리 채워진 채로 열려요.
+        거기서 '보내기'를 눌러야 실제로 전송됩니다.</div>
+    </div>
+  </div>
+
+  <div class="host-link-wrap">
+    <button class="host-link" id="hostLink">진행자 화면 열기</button>
+  </div>
+
+  <footer>© 2026 Joanna Lee. All rights reserved.</footer>
+
+<script>
+(function(){
+  var TOKEN_KEY = 'za2030_deepdive_actioncard_token';
+  var token = localStorage.getItem(TOKEN_KEY);
+  if(!token){
+    token = 'p_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,10);
+    localStorage.setItem(TOKEN_KEY, token);
+  }
+
+  var refList = document.getElementById('refList');
+  var prioritySelect = document.getElementById('prioritySelect');
+  var form = document.getElementById('cardForm');
+  var actionInput = document.getElementById('actionInput');
+  var whyInput = document.getElementById('whyInput');
+  var ownerInput = document.getElementById('ownerInput');
+  var firstStepInput = document.getElementById('firstStepInput');
+  var whenInput = document.getElementById('whenInput');
+  var submitBtn = document.getElementById('submitBtn');
+  var statusEl = document.getElementById('status');
+  var emailCard = document.getElementById('emailCard');
+  var emailAddrInput = document.getElementById('emailAddrInput');
+  var emailBtn = document.getElementById('emailBtn');
+
+  var EMAIL_KEY = 'za2030_deepdive_actioncard_email';
+  emailAddrInput.value = localStorage.getItem(EMAIL_KEY) || '';
+
+  var OTHER_VALUE = '__other__';
+  var lastFinalizedOptions = [];
+  var lastEntryData = null;
+
+  function escapeHtml(s){
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function renderReference(finalizedOptions){
+    if(!finalizedOptions || finalizedOptions.length === 0){
+      refList.innerHTML = '<div class="ref-empty">아직 진행자가 확정한 우선순위가 없어요</div>';
+      return;
+    }
+    refList.innerHTML = finalizedOptions.map(function(f){
+      return '<div class="ref-item">✓ ' + escapeHtml(f.sentence) + '</div>';
+    }).join('');
+  }
+
+  function renderPriorityOptions(finalizedOptions, selectedId){
+    var options = (finalizedOptions || []).map(function(f){
+      var sel = f.id === selectedId ? ' selected' : '';
+      return '<option value="' + escapeHtml(f.id) + '"' + sel + '>' + escapeHtml(f.candidateText) + '</option>';
+    }).join('');
+    var otherSel = (!selectedId || (finalizedOptions || []).every(function(f){ return f.id !== selectedId; })) ? ' selected' : '';
+    prioritySelect.innerHTML = options + '<option value="' + OTHER_VALUE + '"' + otherSel + '>기타 / 아직 정해지지 않음</option>';
+  }
+
+  function fillFormFromEntry(entry, finalizedOptions){
+    if(!entry){
+      renderPriorityOptions(finalizedOptions, null);
+      return;
+    }
+    renderPriorityOptions(finalizedOptions, entry.priorityId);
+    actionInput.value = entry.action || '';
+    whyInput.value = entry.why || '';
+    ownerInput.value = entry.owner || '';
+    firstStepInput.value = entry.firstStep || '';
+    whenInput.value = entry.when || '';
+    submitBtn.textContent = '수정 완료';
+    statusEl.textContent = '이미 제출한 카드예요 — 내용을 고치고 다시 제출하면 수정됩니다.';
+  }
+
+  function pad2(n){ return n < 10 ? '0' + n : String(n); }
+
+  function formatDateTime(d){
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) +
+      ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+
+  function showEmailCard(){
+    emailCard.style.display = 'block';
+  }
+
+  function buildEmailBody(){
+    var entry = lastEntryData || {};
+    var sessionDate = formatDateTime(entry.timestamp ? new Date(entry.timestamp) : new Date());
+    var lines = [];
+    lines.push('■ 세션 정보');
+    lines.push('- 워크숍: ZA2030 딥다이브세션');
+    lines.push('- 기록 시각: ' + sessionDate);
+    lines.push('');
+    lines.push('■ 우리 팀이 확정한 우선순위 (Top ' + lastFinalizedOptions.length + ')');
+    if(lastFinalizedOptions.length){
+      lastFinalizedOptions.forEach(function(f, i){
+        lines.push((i + 1) + '. ' + f.sentence);
+      });
+    } else {
+      lines.push('(아직 진행자가 확정한 우선순위가 없어요)');
+    }
+    lines.push('');
+    lines.push('■ 내 액션과 연결된 우선순위');
+    var linked = null;
+    if(entry.priorityId){
+      linked = lastFinalizedOptions.find(function(f){ return f.id === entry.priorityId; });
+    }
+    lines.push(linked ? linked.sentence : '(특정 우선순위와 연결하지 않음 / 기타)');
+    lines.push('');
+    lines.push('■ 나의 액션 아이템');
+    lines.push('- ACTION: ' + (entry.action || ''));
+    lines.push('- WHY / EXPECTED IMPACT: ' + (entry.why || '(작성 안 함)'));
+    lines.push('- OWNER: ' + (entry.owner || ''));
+    lines.push('- FIRST STEP: ' + (entry.firstStep || '(작성 안 함)'));
+    lines.push('- WHEN: ' + (entry.when || '(작성 안 함)'));
+    return lines.join('\n');
+  }
+
+  emailBtn.addEventListener('click', function(){
+    var addr = emailAddrInput.value.trim();
+    if(!addr){
+      alert('받을 이메일 주소를 입력해주세요.');
+      emailAddrInput.focus();
+      return;
+    }
+    localStorage.setItem(EMAIL_KEY, addr);
+    var subject = '[ZA2030 딥다이브세션] 내 액션 아이템 정리';
+    var body = buildEmailBody();
+    window.location.href = 'mailto:' + encodeURIComponent(addr) +
+      '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+  });
+
+  function loadState(){
+    fetch('/api/actioncard').then(function(r){ return r.json(); }).then(function(data){
+      var finalizedOptions = data.finalizedOptions || [];
+      lastFinalizedOptions = finalizedOptions;
+      renderReference(finalizedOptions);
+      var mine = (data.entries || []).find(function(e){ return e && e.token === token; });
+      fillFormFromEntry(mine, finalizedOptions);
+      if(mine){
+        lastEntryData = mine;
+        showEmailCard();
+      }
+    }).catch(function(){
+      renderPriorityOptions([], null);
+    });
+  }
+  loadState();
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var action = actionInput.value.trim();
+    var owner = ownerInput.value.trim();
+    if(!action || !owner){
+      statusEl.className = 'status';
+      statusEl.textContent = 'ACTION과 OWNER는 꼭 입력해주세요.';
+      return;
+    }
+    var priorityVal = prioritySelect.value;
+    var priorityId = priorityVal && priorityVal !== OTHER_VALUE ? priorityVal : null;
+    var priorityText = priorityId
+      ? (prioritySelect.options[prioritySelect.selectedIndex] || {}).text || ''
+      : '';
+
+    submitBtn.disabled = true;
+    statusEl.className = 'status';
+    statusEl.textContent = '제출 중...';
+
+    fetch('/api/actioncard', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        token: token,
+        priorityId: priorityId,
+        priorityText: priorityText,
+        action_text: action,
+        why: whyInput.value.trim(),
+        owner: owner,
+        firstStep: firstStepInput.value.trim(),
+        when: whenInput.value.trim()
+      })
+    }).then(function(r){ return r.json(); }).then(function(data){
+      submitBtn.disabled = false;
+      if(data && data.ok){
+        submitBtn.textContent = '수정 완료';
+        statusEl.className = 'status ok';
+        statusEl.textContent = '제출되었습니다 ✓';
+        lastFinalizedOptions = data.finalizedOptions || [];
+        lastEntryData = data.entry || null;
+        renderReference(lastFinalizedOptions);
+        showEmailCard();
+      } else {
+        statusEl.className = 'status';
+        statusEl.textContent = '제출에 실패했어요. 다시 시도해주세요.';
+      }
+    }).catch(function(){
+      submitBtn.disabled = false;
+      statusEl.className = 'status';
+      statusEl.textContent = '네트워크 오류. 다시 시도해주세요.';
+    });
+  });
+
+  var HOST_PASSWORD = '1234';
+  document.getElementById('hostLink').addEventListener('click', function(){
+    var pw = window.prompt('진행자 비밀번호를 입력하세요');
+    if(pw === null) return;
+    if(pw === HOST_PASSWORD){
+      window.open('actioncard-host.html', '_blank');
+    } else {
+      alert('비밀번호가 올바르지 않습니다.');
+    }
+  });
+})();
+</script>
+</body>
+</html>

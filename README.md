@@ -1,6 +1,6 @@
 # ZA2030 딥다이브세션 대시보드
 
-딥다이브세션에서 쓰는 4단계 워크숍 대시보드입니다. 스포트라이트 세션 3개 보드(핵심요소/Evidence Hunt/액션아이템)와
+딥다이브세션에서 쓰는 5단계 워크숍 대시보드입니다. 스포트라이트 세션 3개 보드(핵심요소/Evidence Hunt/액션아이템)와
 같은 기술 패턴(Netlify Functions v2 + Netlify Blobs)을 쓰지만, **완전히 독립된 새 사이트/저장소**이고
 데이터 저장소도 모두 별도라서 기존 보드에 영향을 주지 않습니다.
 
@@ -9,9 +9,11 @@
 - **③ Clustering Matrix**: 각 그룹 발표를 들으며 떠오른 키워드를 Impact × Effort 2x2 매트릭스 위에 올려 함께 보는 보드
 - **④ Prioritization**: Clustering Matrix의 QUICK WINS·STRATEGIC MOVES(①②사분면)에서 나온 후보 중 Top 2~3
   액션을 라이브 투표로 좁히고, 진행자가 토론 후 최종 확정하는 보드
+- **⑤ Action Card**: 확정된 Top 2~3 우선순위를 대전제로, 참석자 각자가 자신의 액션(ACTION/WHY/OWNER/
+  FIRST STEP/WHEN)을 기록·제출하는 보드
 
 모든 페이지 상단에는 같은 플로우 탭("① Live Poll → ② Breakout Canvas → ③ Clustering Matrix →
-④ Prioritization")이 있어 세션 흐름을 따라 이동할 수 있습니다.
+④ Prioritization → ⑤ Action Card")이 있어 세션 흐름을 따라 이동할 수 있습니다.
 
 ## 파일 구성
 
@@ -24,10 +26,13 @@ deepdive-poll/
 ├── clustering-host.html             # ③ 진행자용 실시간 매트릭스 화면 (빔프로젝터/큰 화면)
 ├── prioritize.html                  # ④ 참가자용 우선순위 투표 화면
 ├── prioritize-host.html             # ④ 진행자용 후보 관리·투표 현황·최종 확정 화면 (빔프로젝터/큰 화면)
+├── actioncard.html                  # ⑤ 참가자용 액션카드 작성·제출 화면
+├── actioncard-host.html             # ⑤ 진행자용 액션카드 실시간 취합 화면 (빔프로젝터/큰 화면)
 ├── netlify/functions/poll.js        # 투표 저장·집계·초기화 API (Netlify Functions v2)
 ├── netlify/functions/breakout.js    # Breakout Canvas 저장·조회·초기화 API (Netlify Functions v2)
 ├── netlify/functions/clustering.js  # Clustering Matrix 저장·조회·초기화 API (Netlify Functions v2)
 ├── netlify/functions/prioritize.js  # Prioritization 저장·집계·초기화 API (Netlify Functions v2)
+├── netlify/functions/actioncard.js  # Action Card 저장·조회·초기화 API (Netlify Functions v2)
 ├── netlify.toml                      # 빌드 설정 (esbuild 번들러)
 ├── package.json                       # @netlify/blobs 의존성 고정 (11.0.3)
 └── README.md
@@ -56,6 +61,10 @@ deepdive-poll/
    - **Prioritization 참가자용**: `https://<사이트주소>/prioritize.html` — 후보 액션 중 3표를 나눠 투표하는 화면
    - **Prioritization 진행자용**: `https://<사이트주소>/prioritize-host.html` — 후보 가져오기/관리, 실시간
      투표 현황, 최종 Top 2~3 확정 및 결정 문장 입력 화면
+   - **Action Card 참가자용**: `https://<사이트주소>/actioncard.html` — 확정된 우선순위를 참고해 각자
+     자신의 액션카드를 작성·제출하는 화면
+   - **Action Card 진행자용**: `https://<사이트주소>/actioncard-host.html` — 우선순위별로 묶어 실시간
+     취합해 보여주는 화면
 
 ## 동작 방식 — ① Live Poll
 
@@ -136,11 +145,46 @@ deepdive-poll/
 - 데이터 저장: 완전히 새로운 Netlify Blobs 스토어 `za2030-deepdive-prioritize` — 다른 세 활동과 무관하며,
   Clustering Matrix 스토어는 후보를 가져올 때만 읽기 전용으로 참조합니다.
 
+## 동작 방식 — ⑤ Action Card
+
+- **참조 카드(참가자 화면 상단)**: `prioritize-host.html`에서 확정한 Top 2~3 "결정 문장"을 그대로
+  불러와 보여줍니다(서버가 `za2030-deepdive-prioritize` 스토어를 직접 읽는 읽기 전용 크로스 스토어
+  조회 — 참가자가 별도로 확인하러 갈 필요 없이 액션카드 작성 화면에서 바로 대전제를 볼 수 있음).
+- **작성 폼(`actioncard.html`)**: 어떤 우선순위와 관련된 액션인지 드롭다운으로 고르고(확정된 우선순위가
+  없거나 해당 없음일 경우 "기타/아직 정해지지 않음" 선택 가능), 슬라이드의 표 구성 그대로 ACTION /
+  WHY-EXPECTED IMPACT / OWNER / FIRST STEP / WHEN 5개 항목을 입력합니다. ACTION과 OWNER는 필수 입력이며,
+  OWNER와 FIRST STEP 입력칸에는 슬라이드의 "Minimum rule"을 그대로 힌트 문구로 표시합니다(OWNER는
+  개인/역할 단위로 명확하게, FIRST STEP은 "회의를 잡는다"보다 한 단계 더 구체적으로).
+- **1인 1카드, 수정 가능**: 기기별 로컬 토큰으로 참가자당 하나의 카드만 허용합니다. 같은 기기로 다시
+  들어오면 서버에 저장된 내 카드를 찾아 폼에 자동으로 채워주고 버튼이 "수정 완료"로 바뀌어, 다시
+  제출하면 기존 카드를 덮어씁니다(새 카드가 추가되지 않음). 이 활동은 라이브 폴/Prioritization과 달리
+  `resetAt` 로컬 캐시 방식을 쓰지 않고, 페이지를 열 때마다 항상 서버의 최신 카드 목록에서 내 토큰을
+  다시 찾는 방식으로 구현해 초기화 후 옛 상태가 남는 종류의 버그 자체가 생기지 않도록 했습니다.
+- **진행자 화면(`actioncard-host.html`)**: 제출된 카드를 관련 우선순위(결정 문장)별로 묶어 그룹 헤더 +
+  표(ACTION/WHY-EXPECTED IMPACT/OWNER/FIRST STEP/WHEN) 형태로 보여주고, 우선순위와 연결되지 않은 카드는
+  "기타/우선순위 미지정" 그룹으로 따로 모읍니다. 하단에는 슬라이드의 "Minimum rule" 문구를 그대로 배너로
+  띄워 진행자가 참가자들에게 다시 안내할 수 있게 했습니다. 2초 간격으로 자동 새로고침됩니다(탭이 보이지
+  않을 때는 폴링 일시중지).
+- "CSV 다운로드" 버튼으로 (관련 우선순위/ACTION/WHY-EXPECTED IMPACT/OWNER/FIRST STEP/WHEN/제출시각) 표를
+  내려받을 수 있고, "관리자 · 전체 초기화" 버튼으로 비밀번호 확인 후 모든 카드를 지울 수 있습니다(다른
+  활동과 같은 `ADMIN_TOKEN` 사용).
+- 참가자 화면 하단의 "진행자 화면 열기" 버튼으로 비밀번호(기본값 `1234`)를 입력하면 `actioncard-host.html`이
+  새 탭으로 열립니다.
+- 데이터 저장: 완전히 새로운 Netlify Blobs 스토어 `za2030-deepdive-actioncard` — 다른 활동과 무관하며,
+  Prioritization 스토어는 확정된 우선순위 문장을 가져올 때만 읽기 전용으로 참조합니다.
+- **내 액션 이메일로 받기(2026-09-14 추가)**: 제출(또는 재방문 시 내 카드 자동 로드) 후 폼 아래에
+  "내 액션, 이메일로 받아보기" 카드가 나타납니다. 받을 이메일 주소를 입력하고 버튼을 누르면 `mailto:`
+  링크로 참가자 본인의 메일 앱이 열리고, 아래 내용이 제목·본문에 미리 채워져 있습니다 — 실제 전송은
+  참가자가 메일 앱에서 "보내기"를 눌러야 완료됩니다(별도 이메일 발송 서비스·API 키 설정이 필요 없는
+  방식이라 지금 바로 쓸 수 있음). 본문에 포함되는 내용: 세션 정보(워크숍명·기록 시각), 우리 팀이 확정한
+  Top 2~3 우선순위 문장 전체, 내 액션과 연결된 우선순위 문장(연결 안 했으면 "기타" 표시), 내 액션카드
+  전체(ACTION/WHY/OWNER/FIRST STEP/WHEN). 입력한 이메일 주소는 다음 방문을 위해 로컬에 기억해둡니다.
+
 ## 참고
 
 - 원인 파악에 시간이 걸렸던 과거 트러블슈팅(v1 함수 방식으로 인한 `MissingBlobsEnvironmentError`)을
-  피하기 위해 네 함수 모두 처음부터 v2 방식(`export default` + `config.path`)으로 작성했고,
-  `getStore()` 호출을 try/catch로 감쌌습니다. `poll.js`/`breakout.js`/`clustering.js`/`prioritize.js` 모두
-  로컬에서 Netlify Blobs를 흉내 낸 인메모리 스텁으로 시뮬레이션 테스트를 거쳤습니다.
+  피하기 위해 다섯 함수 모두 처음부터 v2 방식(`export default` + `config.path`)으로 작성했고,
+  `getStore()` 호출을 try/catch로 감쌌습니다. `poll.js`/`breakout.js`/`clustering.js`/`prioritize.js`/
+  `actioncard.js` 모두 로컬에서 Netlify Blobs를 흉내 낸 인메모리 스텁으로 시뮬레이션 테스트를 거쳤습니다.
 - 딥다이브세션에 활동이 더 추가되면 같은 방식(새 페이지 + 새 함수 + 새 Blobs 스토어)으로 이어서
-  확장하고, 플로우 탭에 ⑤를 추가하면 됩니다.
+  확장하고, 플로우 탭에 ⑥을 추가하면 됩니다.
