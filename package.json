@@ -1,0 +1,10 @@
+{
+  "name": "deepdive-poll",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ZA2030 딥다이브세션 - 라이브 폴 (익명 1~5점 투표)",
+  "dependencies": {
+    "@netlify/blobs": "11.0.3"
+  }
+}

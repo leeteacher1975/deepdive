@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>LIVE POLL · ZA2030 딥다이브세션</title>
+<link rel="stylesheet" as="style" crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<style>
+  :root{
+    --blue-dark:#1D4E89;
+    --blue:#2D6CDF;
+    --ink:#14213D;
+    --sub:#5B6B85;
+    --bg:#EEF3FB;
+    --card:#FFFFFF;
+    --line:#DCE5F5;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Pretendard","-apple-system",BlinkMacSystemFont,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .header{
+    width:100%;
+    background:linear-gradient(135deg,var(--blue-dark),var(--blue));
+    color:#fff;
+    padding:28px 20px 34px;
+    text-align:center;
+    border-radius:0 0 28px 28px;
+    box-shadow:0 8px 24px rgba(29,78,137,0.25);
+  }
+  .badge{
+    display:inline-block;
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:2px;
+    background:rgba(255,255,255,0.18);
+    padding:6px 14px;
+    border-radius:999px;
+    margin-bottom:14px;
+  }
+  .header h1{
+    margin:0;
+    font-size:22px;
+    line-height:1.5;
+    font-weight:800;
+  }
+  .anon-note{
+    margin-top:10px;
+    font-size:13px;
+    opacity:0.85;
+  }
+  .content{
+    width:100%;
+    max-width:480px;
+    padding:28px 20px 40px;
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    flex:1;
+  }
+  .scale-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:22px 18px 26px;
+    box-shadow:0 6px 18px rgba(29,78,137,0.08);
+  }
+  .scale-labels{
+    display:flex;
+    justify-content:space-between;
+    font-size:13px;
+    color:var(--sub);
+    font-weight:600;
+    padding:0 4px;
+    margin-bottom:14px;
+  }
+  .scale-labels span:last-child{ text-align:right; max-width:45%; }
+  .scale-labels span:first-child{ max-width:45%; }
+  .scale-buttons{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:10px;
+  }
+  .scale-btn{
+    aspect-ratio:1/1;
+    min-height:56px;
+    border-radius:16px;
+    border:2px solid var(--line);
+    background:#F6F9FF;
+    color:var(--blue-dark);
+    font-size:22px;
+    font-weight:800;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition:transform .12s ease, box-shadow .12s ease, background .12s ease, color .12s ease, border-color .12s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .scale-btn:active{ transform:scale(0.94); }
+  .scale-btn[data-score="1"]{ --c:#94A3B8; }
+  .scale-btn[data-score="2"]{ --c:#5A8FD6; }
+  .scale-btn[data-score="3"]{ --c:#3B72CF; }
+  .scale-btn[data-score="4"]{ --c:#2D5BC7; }
+  .scale-btn[data-score="5"]{ --c:#1D4E89; }
+  .scale-btn.selected{
+    background:var(--c);
+    border-color:var(--c);
+    color:#fff;
+    box-shadow:0 6px 16px rgba(29,78,137,0.35);
+  }
+  .scale-btn.disabled{ pointer-events:none; opacity:0.55; }
+
+  .status{
+    text-align:center;
+    font-size:13px;
+    color:var(--sub);
+    margin-top:16px;
+    min-height:18px;
+  }
+
+  .done-card{
+    display:none;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:40px 24px;
+    text-align:center;
+    box-shadow:0 6px 18px rgba(29,78,137,0.08);
+  }
+  .done-card.show{ display:block; }
+  .scale-card.hide{ display:none; }
+  .check{
+    width:64px;height:64px;border-radius:50%;
+    background:linear-gradient(135deg,var(--blue-dark),var(--blue));
+    color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:32px;
+    margin:0 auto 16px;
+  }
+  .done-card h2{ margin:0 0 6px; font-size:19px; }
+  .done-score{
+    font-size:15px;
+    color:var(--sub);
+    margin-bottom:22px;
+  }
+  .done-score b{ color:var(--blue-dark); font-size:20px; }
+  .change-link{
+    display:inline-block;
+    font-size:14px;
+    font-weight:700;
+    color:var(--blue);
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:10px 16px;
+    min-height:44px;
+  }
+
+  footer{
+    width:100%;
+    text-align:center;
+    font-size:12px;
+    color:var(--sub);
+    padding:18px 12px 26px;
+  }
+
+  @media (max-width:375px){
+    .header{ padding:22px 14px 26px; border-radius:0 0 20px 20px; }
+    .header h1{ font-size:19px; }
+    .content{ padding:22px 14px 32px; }
+    .scale-card{ padding:18px 12px 20px; }
+    .scale-btn{ min-height:48px; font-size:19px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <span class="badge">LIVE POLL</span>
+    <h1>현재 우리 팀의 일상에서<br/>ZEISS Agenda 2030이 얼마나<br/>구체적으로 연결되어 있다고 느끼나요?</h1>
+    <div class="anon-note">* 이름/소속 없이 완전 익명으로 응답이 집계됩니다</div>
+  </div>
+
+  <div class="content">
+    <div class="scale-card" id="scaleCard">
+      <div class="scale-labels">
+        <span>1 · 거의 연결되지 않음</span>
+        <span>5 · 매우 구체적으로 연결됨</span>
+      </div>
+      <div class="scale-buttons" id="scaleButtons">
+        <button class="scale-btn" data-score="1">1</button>
+        <button class="scale-btn" data-score="2">2</button>
+        <button class="scale-btn" data-score="3">3</button>
+        <button class="scale-btn" data-score="4">4</button>
+        <button class="scale-btn" data-score="5">5</button>
+      </div>
+      <div class="status" id="status"></div>
+    </div>
+
+    <div class="done-card" id="doneCard">
+      <div class="check">✓</div>
+      <h2>응답이 제출되었습니다</h2>
+      <div class="done-score">내가 선택한 점수 · <b id="myScore">-</b> / 5</div>
+      <button class="change-link" id="changeLink">다시 선택하기</button>
+    </div>
+  </div>
+
+  <footer>© 2026 Joanna Lee. All rights reserved.</footer>
+
+<script>
+(function(){
+  var TOKEN_KEY = 'za2030_deepdive_poll_token';
+  var token = localStorage.getItem(TOKEN_KEY);
+  if(!token){
+    token = 'p_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,10);
+    localStorage.setItem(TOKEN_KEY, token);
+  }
+
+  var scaleCard = document.getElementById('scaleCard');
+  var doneCard = document.getElementById('doneCard');
+  var buttons = document.querySelectorAll('.scale-btn');
+  var statusEl = document.getElementById('status');
+  var myScoreEl = document.getElementById('myScore');
+  var changeLink = document.getElementById('changeLink');
+
+  var VOTED_KEY = 'za2030_deepdive_poll_myscore';
+  var savedScore = localStorage.getItem(VOTED_KEY);
+  if(savedScore){
+    showDone(savedScore);
+  }
+
+  function showDone(score){
+    myScoreEl.textContent = score;
+    scaleCard.classList.add('hide');
+    doneCard.classList.add('show');
+  }
+
+  function showScale(){
+    scaleCard.classList.remove('hide');
+    doneCard.classList.remove('show');
+    statusEl.textContent = '';
+  }
+
+  function setBusy(busy){
+    buttons.forEach(function(b){ b.classList.toggle('disabled', busy); });
+  }
+
+  function submit(score){
+    setBusy(true);
+    statusEl.textContent = '제출 중...';
+    fetch('/api/poll', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ token: token, score: score })
+    }).then(function(r){ return r.json(); }).then(function(data){
+      if(data && data.ok){
+        localStorage.setItem(VOTED_KEY, String(score));
+        showDone(score);
+      } else {
+        statusEl.textContent = '제출에 실패했어요. 다시 시도해주세요.';
+        setBusy(false);
+      }
+    }).catch(function(){
+      statusEl.textContent = '네트워크 오류. 다시 시도해주세요.';
+      setBusy(false);
+    });
+  }
+
+  buttons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      buttons.forEach(function(b){ b.classList.remove('selected'); });
+      btn.classList.add('selected');
+      submit(Number(btn.getAttribute('data-score')));
+    });
+  });
+
+  changeLink.addEventListener('click', function(){
+    showScale();
+  });
+})();
+</script>
+</body>
+</html>
