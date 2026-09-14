@@ -214,6 +214,10 @@
     </div>
   </div>
 
+  <div style="text-align:center;">
+    <button class="change-link" id="hostLink" style="color:var(--sub);font-size:12px;">진행자 화면 열기</button>
+  </div>
+
   <footer>© 2026 Joanna Lee. All rights reserved.</footer>
 
 <script>
@@ -285,6 +289,17 @@
 
   changeLink.addEventListener('click', function(){
     showScale();
+  });
+
+  var HOST_PASSWORD = '1234';
+  document.getElementById('hostLink').addEventListener('click', function(){
+    var pw = window.prompt('진행자 비밀번호를 입력하세요');
+    if(pw === null) return;
+    if(pw === HOST_PASSWORD){
+      window.location.href = 'host.html';
+    } else {
+      alert('비밀번호가 올바르지 않습니다.');
+    }
   });
 })();
 </script>
