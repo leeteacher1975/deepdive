@@ -30,6 +30,10 @@ function summarize(entries) {
   return { counts, total, average };
 }
 
+async function loadMeta(store) {
+  return (await store.get('meta', { type: 'json' })) || { resetAt: null };
+}
+
 export default async (req, context) => {
   // MissingBlobsEnvironmentError 등 스토어 초기화 실패를 방어적으로 처리
   // (v1 exports.handler 방식이 원인이었던 과거 트러블슈팅 이력 — 이 함수는 v2 방식이므로 해당 없음)
@@ -43,7 +47,8 @@ export default async (req, context) => {
   try {
     if (req.method === 'GET') {
       const list = (await store.get('entries', { type: 'json' })) || [];
-      return jsonResponse(summarize(list));
+      const meta = await loadMeta(store);
+      return jsonResponse({ ...summarize(list), resetAt: meta.resetAt });
     }
 
     if (req.method === 'POST') {
@@ -54,8 +59,12 @@ export default async (req, context) => {
         if (body.password !== ADMIN_TOKEN) {
           return jsonResponse({ error: 'unauthorized' }, 401);
         }
+        const resetAt = new Date().toISOString();
         await store.set('entries', JSON.stringify([]));
-        return jsonResponse({ ok: true, ...summarize([]) });
+        // resetAt을 기록해두면, 참가자 브라우저에 남아있는 "이미 투표함" 로컬 캐시가
+        // 초기화 이전 것인지 구분할 수 있어 초기화 후에도 예전 응답 화면이 계속 보이는 문제를 막을 수 있음
+        await store.set('meta', JSON.stringify({ resetAt }));
+        return jsonResponse({ ok: true, resetAt, ...summarize([]) });
       }
 
       const { token, score } = body;
@@ -76,7 +85,8 @@ export default async (req, context) => {
         list.push(entry);
       }
       await store.set('entries', JSON.stringify(list));
-      return jsonResponse({ ok: true, myScore: scoreNum, ...summarize(list) });
+      const meta = await loadMeta(store);
+      return jsonResponse({ ok: true, myScore: scoreNum, resetAt: meta.resetAt, ...summarize(list) });
     }
 
     return jsonResponse({ error: 'method_not_allowed' }, 405);

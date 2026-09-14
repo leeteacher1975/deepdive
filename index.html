@@ -268,9 +268,26 @@
   var changeLink = document.getElementById('changeLink');
 
   var VOTED_KEY = 'za2030_deepdive_poll_myscore';
+  var VOTED_RESET_KEY = 'za2030_deepdive_poll_myscore_resetat';
   var savedScore = localStorage.getItem(VOTED_KEY);
+  var savedResetAt = localStorage.getItem(VOTED_RESET_KEY);
+
   if(savedScore){
-    showDone(savedScore);
+    // 로컬에 "이미 투표함" 기록이 있어도, 그 사이 관리자가 전체 초기화를 했다면 서버의 resetAt이
+    // 달라져 있으므로 그걸 확인한 뒤에만 완료 화면을 보여준다 (초기화 후에도 예전 응답이 계속 보이는 문제 방지)
+    fetch('/api/poll').then(function(r){ return r.json(); }).then(function(data){
+      var serverResetAt = data && data.resetAt ? data.resetAt : null;
+      if(serverResetAt && serverResetAt !== savedResetAt){
+        // 그 사이 초기화가 있었음 -> 로컬 캐시를 지우고 새로 투표할 수 있게 둠
+        localStorage.removeItem(VOTED_KEY);
+        localStorage.removeItem(VOTED_RESET_KEY);
+      } else {
+        showDone(savedScore);
+      }
+    }).catch(function(){
+      // 서버 확인이 실패하면 기존 로컬 캐시를 그대로 신뢰(오프라인 등 예외 상황 대비)
+      showDone(savedScore);
+    });
   }
 
   function showDone(score){
@@ -299,6 +316,7 @@
     }).then(function(r){ return r.json(); }).then(function(data){
       if(data && data.ok){
         localStorage.setItem(VOTED_KEY, String(score));
+        localStorage.setItem(VOTED_RESET_KEY, data.resetAt || '');
         showDone(score);
       } else {
         statusEl.textContent = '제출에 실패했어요. 다시 시도해주세요.';
