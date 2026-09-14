@@ -7,7 +7,7 @@ const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'za2030admin';
 const ELEMENT_IDS = ['customer', 'speed', 'global', 'hpt'];
 
 function emptyElement() {
-  return { meaning: '', action: '', change: '', evidence: '', updatedAt: null };
+  return { participants: '', meaning: '', action: '', change: '', evidence: '', updatedAt: null };
 }
 
 function emptyElements() {
@@ -67,10 +67,10 @@ export default async (req, context) => {
       const elements = (await store.get('elements', { type: 'json' })) || emptyElements();
       ELEMENT_IDS.forEach((id) => { if (!elements[id]) elements[id] = emptyElement(); });
 
-      const FIELD_KEYS = ['meaning', 'action', 'change', 'evidence'];
+      const FIELD_KEYS = ['participants', 'meaning', 'action', 'change', 'evidence'];
 
       if (field) {
-        // 칸(quadrant) 단위 저장 — 이 칸만 갱신하고 다른 3칸은 그대로 둔다.
+        // 칸(quadrant/참여자) 단위 저장 — 이 칸만 갱신하고 나머지는 그대로 둔다.
         // 그룹원이 각자 다른 칸을 동시에 편집해도 서로 덮어쓰지 않도록 하기 위함.
         if (!FIELD_KEYS.includes(field)) {
           return jsonResponse({ error: 'invalid_field' }, 400);
@@ -78,8 +78,9 @@ export default async (req, context) => {
         elements[element][field] = sanitizeText(body.value);
         elements[element].updatedAt = new Date().toISOString();
       } else {
-        // 하위 호환용: 4칸을 한 번에 통째로 저장(예전 방식)
+        // 하위 호환용: 참여자+4칸을 한 번에 통째로 저장(예전 방식)
         elements[element] = {
+          participants: sanitizeText(body.participants),
           meaning: sanitizeText(body.meaning),
           action: sanitizeText(body.action),
           change: sanitizeText(body.change),

@@ -85,6 +85,30 @@
   }
   .total-bar b{ color:var(--blue-dark); font-size:16px; }
 
+  .guide-card{
+    max-width:860px;
+    margin:0 auto 20px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:20px 26px;
+    text-align:center;
+    box-shadow:0 6px 18px rgba(29,78,137,0.08);
+  }
+  .guide-title{
+    margin:0 0 14px;
+    font-size:clamp(15px,2.1vw,18px);
+    font-weight:800;
+    color:var(--blue-dark);
+    line-height:1.5;
+  }
+  .guide-questions p{
+    margin:8px 0;
+    font-size:14.5px;
+    font-weight:600;
+    color:var(--ink);
+  }
+
   .matrix{
     display:grid;
     grid-template-columns:auto 1fr 1fr;
@@ -226,6 +250,15 @@
   </div>
 
   <div class="wrap">
+    <div class="guide-card">
+      <h2 class="guide-title">결과물: '아이디어 목록'이 아니라 '팀이 반복적으로 마주치는 핵심 패턴'</h2>
+      <div class="guide-questions">
+        <p>"우리가 반복해서 이야기하는 것은 무엇인가?"</p>
+        <p>"Element가 달라도 연결되는 행동은?"</p>
+        <p>"이미 강점인 것은 무엇인가?"</p>
+      </div>
+    </div>
+
     <div class="total-bar">지금까지 총 <b id="totalCount">0</b>개의 키워드가 올라왔어요</div>
 
     <div class="matrix">

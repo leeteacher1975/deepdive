@@ -66,8 +66,10 @@ deepdive-poll/
 ## 동작 방식 — ② Breakout Canvas
 
 - "작성하기" 탭에서 그룹이 4개 요소(Customer at the Core / Speed / Truly Global / High-Performance Team ZEISS)
-  중 하나를 선택하면, 해당 요소의 Group Mission 문구와 4개 입력 칸(A. MEANING / B. ALREADY IN ACTION /
-  C. DO DIFFERENTLY / D. EVIDENCE·EXAMPLE)이 나타납니다.
+  중 하나를 선택하면, 해당 요소의 Group Mission 문구, "참여자(소속·이름)" 입력 칸 1개, 그리고 4개 입력 칸
+  (A. MEANING / B. ALREADY IN ACTION / C. DO DIFFERENTLY / D. EVIDENCE·EXAMPLE)이 나타납니다. 참여자 칸도
+  다른 칸과 동일하게 자동저장/실시간 동기화 대상이며, CSV와 "함께 보기" 화면에도 함께 표시됩니다
+  (2026-09-14 추가 — 이 활동은 다른 두 활동과 달리 익명이 아니라서 누가 참여했는지 남길 수 있게 함).
 - 입력을 멈추면 약 1.2초 후 그 **칸 하나만** 자동 저장됩니다(별도 저장 버튼 없음, 칸마다 저장 상태 표시).
   같은 요소의 다른 3칸은 건드리지 않으므로, 그룹원 4명이 각자 다른 기기로 A/B/C/D 칸을 하나씩 맡아 **동시에**
   입력해도 서로 덮어쓰지 않습니다. 또한 작성하기 화면은 3초 간격으로 서버 최신 값을 확인해, 내가 지금

@@ -150,6 +150,35 @@
   }
   .mission b{ color:var(--el-color, var(--blue-dark)); }
 
+  .participants-card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-left:5px solid var(--el-color, var(--blue-dark));
+    border-radius:14px;
+    padding:14px 16px;
+    margin-bottom:14px;
+  }
+  .participants-card label{
+    display:block;
+    font-size:13px;
+    font-weight:800;
+    color:var(--el-color, var(--blue-dark));
+    margin-bottom:8px;
+  }
+  .participants-card textarea{
+    width:100%;
+    min-height:52px;
+    resize:vertical;
+    font-family:inherit;
+    font-size:14px;
+    line-height:1.5;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px 12px;
+    color:var(--ink);
+  }
+  .participants-card textarea:focus{ outline:2px solid var(--el-color, var(--blue)); outline-offset:1px; }
+
   .quad-grid{
     display:grid;
     grid-template-columns:1fr 1fr;
@@ -264,6 +293,11 @@
       <div class="empty-hint" id="emptyHint">위에서 우리 그룹이 맡은 요소를 선택하세요</div>
       <div class="canvas" id="canvas">
         <div class="mission" id="missionText"></div>
+        <div class="participants-card" id="participantsCard">
+          <label for="participantsInput">참여자 (소속 · 이름)</label>
+          <textarea id="participantsInput" placeholder="예: SSC IT팀 홍길동, 마케팅팀 김영희"></textarea>
+          <div class="quad-status" id="participantsStatus"></div>
+        </div>
         <div class="quad-grid" id="quadGrid"></div>
         <div class="save-status" id="saveStatus"></div>
       </div>
@@ -300,9 +334,18 @@
   var emptyHint = document.getElementById('emptyHint');
   var canvasEl = document.getElementById('canvas');
   var missionText = document.getElementById('missionText');
+  var participantsInput = document.getElementById('participantsInput');
+  var participantsStatus = document.getElementById('participantsStatus');
   var quadGrid = document.getElementById('quadGrid');
   var saveStatus = document.getElementById('saveStatus');
   var togetherGrid = document.getElementById('togetherGrid');
+
+  var ALL_FIELD_KEYS = ['participants'].concat(QUADS.map(function(q){ return q.key; }));
+
+  function getFieldEl(key){
+    if(key === 'participants') return participantsInput;
+    return quadGrid.querySelector('textarea[data-key="'+key+'"]');
+  }
 
   var tabWriteBtn = document.getElementById('tabWriteBtn');
   var tabTogetherBtn = document.getElementById('tabTogetherBtn');
@@ -332,6 +375,13 @@
     btn.dataset.id = el.id;
     btn.addEventListener('click', function(){ selectElement(el.id); });
     elementPicker.appendChild(btn);
+  });
+
+  participantsInput.addEventListener('input', function(){
+    dirty.participants = true;
+    setFieldStatus('participants', '입력 중...');
+    if(saveTimers.participants) clearTimeout(saveTimers.participants);
+    saveTimers.participants = setTimeout(function(){ saveField('participants'); }, 1200);
   });
 
   function refreshPickerHighlight(){
@@ -369,7 +419,13 @@
     if(el) el.textContent = text;
   }
 
+  function setFieldStatus(key, text){
+    if(key === 'participants'){ participantsStatus.textContent = text; return; }
+    setQuadStatus(key, text);
+  }
+
   function fillCanvas(data){
+    participantsInput.value = (data && data.participants) || '';
     QUADS.forEach(function(q){
       var ta = quadGrid.querySelector('textarea[data-key="'+q.key+'"]');
       if(ta) ta.value = (data && data[q.key]) || '';
@@ -380,18 +436,18 @@
   // (그렇지 않으면 타이머가 늦게 발화하면서 방금 고른 새 요소에 잘못 저장될 수 있음)
   function flushPendingSaves(oldId){
     if(!oldId) return;
-    QUADS.forEach(function(q){
-      if(saveTimers[q.key]){
-        clearTimeout(saveTimers[q.key]);
-        saveTimers[q.key] = null;
+    ALL_FIELD_KEYS.forEach(function(key){
+      if(saveTimers[key]){
+        clearTimeout(saveTimers[key]);
+        saveTimers[key] = null;
       }
-      if(dirty[q.key]){
-        var ta = quadGrid.querySelector('textarea[data-key="'+q.key+'"]');
-        var value = ta ? ta.value : '';
+      if(dirty[key]){
+        var el = getFieldEl(key);
+        var value = el ? el.value : '';
         fetch('/api/breakout', {
           method:'POST',
           headers:{ 'Content-Type':'application/json' },
-          body: JSON.stringify({ element: oldId, field: q.key, value: value })
+          body: JSON.stringify({ element: oldId, field: key, value: value })
         }).catch(function(){});
       }
     });
@@ -417,12 +473,12 @@
     startWriteSync();
   }
 
-  // 칸(quadrant) 하나만 저장 — 같은 요소의 다른 칸을 동시에 다른 사람이 쓰고 있어도 서로 덮어쓰지 않음
+  // 칸(quadrant/참여자) 하나만 저장 — 같은 요소의 다른 칸을 동시에 다른 사람이 쓰고 있어도 서로 덮어쓰지 않음
   function saveField(key){
     if(!selectedId) return;
-    var ta = quadGrid.querySelector('textarea[data-key="'+key+'"]');
+    var ta = getFieldEl(key);
     var value = ta ? ta.value : '';
-    setQuadStatus(key, '저장 중...');
+    setFieldStatus(key, '저장 중...');
     fetch('/api/breakout', {
       method:'POST',
       headers:{ 'Content-Type':'application/json' },
@@ -430,12 +486,12 @@
     }).then(function(r){ return r.json(); }).then(function(data){
       if(data && data.ok){
         dirty[key] = false;
-        setQuadStatus(key, '저장됨');
+        setFieldStatus(key, '저장됨');
       } else {
-        setQuadStatus(key, '저장 실패 — 다시 시도해주세요');
+        setFieldStatus(key, '저장 실패 — 다시 시도해주세요');
       }
     }).catch(function(){
-      setQuadStatus(key, '네트워크 오류 — 다시 시도해주세요');
+      setFieldStatus(key, '네트워크 오류 — 다시 시도해주세요');
     });
   }
 
@@ -447,12 +503,12 @@
       var elements = (data && data.elements) || {};
       var el = elements[selectedId];
       if(!el) return;
-      QUADS.forEach(function(q){
-        var ta = quadGrid.querySelector('textarea[data-key="'+q.key+'"]');
+      ALL_FIELD_KEYS.forEach(function(key){
+        var ta = getFieldEl(key);
         if(!ta) return;
         var isFocused = document.activeElement === ta;
-        if(isFocused || dirty[q.key]) return; // 편집 중이거나 저장 대기 중인 칸은 건드리지 않음
-        var serverVal = el[q.key] || '';
+        if(isFocused || dirty[key]) return; // 편집 중이거나 저장 대기 중인 칸은 건드리지 않음
+        var serverVal = el[key] || '';
         if(ta.value !== serverVal) ta.value = serverVal;
       });
     }).catch(function(){ /* 다음 주기에 재시도 */ });
@@ -487,6 +543,10 @@
       var col = document.createElement('div');
       col.className = 'together-col';
       col.style.setProperty('--el-color', el.color);
+      var participantsHtml =
+        '<div class="mini-q">참여자</div>' +
+        '<div class="mini-v' + (data.participants ? '' : ' empty') + '">' +
+        (data.participants ? escapeHtml(data.participants) : '아직 입력 전') + '</div>';
       var body = QUADS.map(function(q){
         var v = data[q.key];
         return '<div class="mini-q">' + q.title + '</div>' +
@@ -494,7 +554,7 @@
       }).join('');
       col.innerHTML =
         '<div class="col-head">' + el.label + '</div>' +
-        '<div class="col-body">' + body +
+        '<div class="col-body">' + participantsHtml + body +
         '<div class="updated">' + timeAgo(data.updatedAt) + '</div></div>';
       togetherGrid.appendChild(col);
     });
@@ -571,13 +631,14 @@
       alert('아직 데이터를 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
       return;
     }
-    var headers = ['요소', 'Group Mission', 'A. MEANING', 'B. ALREADY IN ACTION', 'C. DO DIFFERENTLY', 'D. EVIDENCE / EXAMPLE', '마지막 업데이트'];
+    var headers = ['요소', '참여자', 'Group Mission', 'A. MEANING', 'B. ALREADY IN ACTION', 'C. DO DIFFERENTLY', 'D. EVIDENCE / EXAMPLE', '마지막 업데이트'];
     var rows = [headers];
     ELEMENTS.forEach(function(el){
       var data = elements[el.id] || {};
       var mission = el.label + ' 이 요소를 우리 팀의 실제 업무에서 어떻게 살아 있게 만들 것인가?';
       rows.push([
         el.label,
+        data.participants || '',
         mission,
         data.meaning || '',
         data.action || '',
