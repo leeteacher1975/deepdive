@@ -480,15 +480,9 @@
     });
   });
 
-  var HOST_PASSWORD = '1234';
+  // 진행자 화면 자체(host/actioncard.html)가 입장 시 비밀번호를 요구하므로 여기서는 바로 새 탭만 엶
   document.getElementById('hostLink').addEventListener('click', function(){
-    var pw = window.prompt('진행자 비밀번호를 입력하세요');
-    if(pw === null) return;
-    if(pw === HOST_PASSWORD){
-      window.open('actioncard-host.html', '_blank');
-    } else {
-      alert('비밀번호가 올바르지 않습니다.');
-    }
+    window.open('host/actioncard.html', '_blank');
   });
 })();
 </script>

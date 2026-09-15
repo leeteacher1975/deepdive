@@ -162,7 +162,8 @@ export default async (req, context) => {
 
       // ---- 진행자: 최종 Top 2~3 확정 후보에 추가 ----
       if (body.action === 'finalize_add') {
-        if (!state.candidates.some((c) => c.id === body.candidateId)) {
+        const cand = state.candidates.find((c) => c.id === body.candidateId);
+        if (!cand) {
           return jsonResponse({ error: 'not_found' }, 404);
         }
         if (state.finalized.some((f) => f.candidateId === body.candidateId)) {
@@ -171,9 +172,11 @@ export default async (req, context) => {
         if (state.finalized.length >= MAX_FINALIZED) {
           return jsonResponse({ error: 'finalize_full' }, 400);
         }
+        // 결정 문장의 첫 번째 빈칸("~을(를) 통해")은 후보 키워드 문구를 기본값으로 자동 채움
+        // (진행자가 그대로 두거나 자연스럽게 다듬어 수정할 수 있음 — finalize_field로 계속 편집 가능)
         state.finalized.push({
           candidateId: body.candidateId,
-          blank1: '',
+          blank1: cand.text,
           blank2: '',
           updatedAt: new Date().toISOString(),
         });

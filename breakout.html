@@ -268,15 +268,15 @@
 <body>
 
   <div class="flow-nav">
-    <a href="index.html" class="flow-tab">① Live Poll</a>
+    <a href="index.html" id="flowLive" class="flow-tab">① Live Poll</a>
     <span class="flow-arrow">→</span>
     <a href="breakout.html" class="flow-tab active">② Breakout Canvas</a>
     <span class="flow-arrow">→</span>
-    <a href="clustering.html" class="flow-tab">③ Clustering Matrix</a>
+    <a href="clustering.html" id="flowClustering" class="flow-tab">③ Clustering Matrix</a>
     <span class="flow-arrow">→</span>
-    <a href="prioritize.html" class="flow-tab">④ Prioritization</a>
+    <a href="prioritize.html" id="flowPrioritize" class="flow-tab">④ Prioritization</a>
     <span class="flow-arrow">→</span>
-    <a href="actioncard.html" class="flow-tab">⑤ Action Card</a>
+    <a href="actioncard.html" id="flowActioncard" class="flow-tab">⑤ Action Card</a>
   </div>
 
   <div class="header">
@@ -600,12 +600,43 @@
   });
 
   // ---- 탭 전환 ----
+  // "함께 보기"는 사실상 진행자용 화면이라, 다른 활동들과 마찬가지로 비밀번호로 한 번 게이트한다
+  // (같은 브라우저에서는 한 번 통과하면 다시 묻지 않음). "작성하기"는 참가자용이라 게이트 없음.
+  var HOST_AUTH_KEY = 'za2030_deepdive_host_auth';
+  var HOST_PASSWORD = '1234';
+  function ensureHostAuth(){
+    try {
+      if(localStorage.getItem(HOST_AUTH_KEY) === 'ok') return true;
+    } catch(e) {}
+    var pw = window.prompt('진행자 비밀번호를 입력하세요');
+    if(pw === HOST_PASSWORD){
+      try { localStorage.setItem(HOST_AUTH_KEY, 'ok'); } catch(e) {}
+      return true;
+    }
+    if(pw !== null) alert('비밀번호가 올바르지 않습니다.');
+    return false;
+  }
+
+  // 플로우 탭은 지금 보고 있는 게 참가자 화면인지 진행자 화면인지에 따라 나머지 탭의 목적지를 바꿔줌
+  // ("함께 보기" 상태에서는 다른 활동도 전부 진행자 화면(host/*.html)으로 이어지게)
+  function updateFlowNav(tab){
+    var isHost = tab === 'together';
+    document.getElementById('flowLive').href = isHost ? 'host/index.html' : 'index.html';
+    document.getElementById('flowClustering').href = isHost ? 'host/clustering.html' : 'clustering.html';
+    document.getElementById('flowPrioritize').href = isHost ? 'host/prioritize.html' : 'prioritize.html';
+    document.getElementById('flowActioncard').href = isHost ? 'host/actioncard.html' : 'actioncard.html';
+  }
+
   function showTab(tab){
+    if(tab === 'together' && !ensureHostAuth()){
+      tab = 'write';
+    }
     currentTab = tab;
     tabWriteBtn.classList.toggle('active', tab === 'write');
     tabTogetherBtn.classList.toggle('active', tab === 'together');
     panelWrite.style.display = tab === 'write' ? '' : 'none';
     panelTogether.style.display = tab === 'together' ? '' : 'none';
+    updateFlowNav(tab);
     if(tab === 'together'){
       stopWriteSync();
       startPolling();

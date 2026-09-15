@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script>
+(function(){
+  var AUTH_KEY = 'za2030_deepdive_host_auth';
+  var HOST_PASSWORD = '1234';
+  try {
+    if (localStorage.getItem(AUTH_KEY) === 'ok') return;
+  } catch(e) {}
+  var pw = window.prompt('진행자 비밀번호를 입력하세요');
+  if (pw === HOST_PASSWORD) {
+    try { localStorage.setItem(AUTH_KEY, 'ok'); } catch(e) {}
+  } else {
+    if (pw !== null) alert('비밀번호가 올바르지 않습니다.');
+    window.location.replace('../index.html');
+  }
+})();
+</script>
+<title>LIVE POLL 결과 · ZA2030 딥다이브세션</title>
+<link rel="stylesheet" as="style" crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<style>
+  :root{
+    --blue-dark:#1D4E89;
+    --blue:#2D6CDF;
+    --ink:#14213D;
+    --sub:#5B6B85;
+    --bg:#EEF3FB;
+    --card:#FFFFFF;
+    --line:#DCE5F5;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Pretendard","-apple-system",BlinkMacSystemFont,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    min-height:100vh;
+  }
+  .flow-nav{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    padding:12px 14px;
+    background:#fff;
+    border-bottom:1px solid var(--line);
+    flex-wrap:wrap;
+  }
+  .flow-tab{
+    font-size:13px;
+    font-weight:700;
+    color:var(--sub);
+    text-decoration:none;
+    padding:7px 14px;
+    border-radius:999px;
+    background:#F1F5FC;
+  }
+  .flow-tab.active{ background:var(--blue-dark); color:#fff; }
+  .flow-arrow{ color:var(--sub); font-size:13px; }
+
+  .header{
+    background:linear-gradient(135deg,var(--blue-dark),var(--blue));
+    color:#fff;
+    padding:34px 24px 40px;
+    text-align:center;
+    border-radius:0 0 32px 32px;
+    box-shadow:0 8px 24px rgba(29,78,137,0.25);
+  }
+  .badge{
+    display:inline-block;
+    font-size:14px;
+    font-weight:700;
+    letter-spacing:3px;
+    background:rgba(255,255,255,0.18);
+    padding:7px 16px;
+    border-radius:999px;
+    margin-bottom:16px;
+  }
+  .header h1{
+    margin:0 auto;
+    max-width:780px;
+    font-size:clamp(20px,3.2vw,32px);
+    line-height:1.5;
+    font-weight:800;
+  }
+
+  .wrap{
+    max-width:920px;
+    margin:0 auto;
+    padding:28px 20px 50px;
+    display:grid;
+    grid-template-columns:1.5fr 1fr;
+    gap:22px;
+  }
+  @media (max-width:760px){
+    .wrap{ grid-template-columns:1fr; }
+  }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:22px;
+    padding:26px 24px;
+    box-shadow:0 6px 18px rgba(29,78,137,0.08);
+  }
+
+  .stat-row{
+    display:flex;
+    gap:16px;
+    margin-bottom:20px;
+    flex-wrap:wrap;
+  }
+  .stat-box{
+    flex:1;
+    min-width:130px;
+    background:#F6F9FF;
+    border-radius:16px;
+    padding:16px 18px;
+    text-align:center;
+  }
+  .stat-box .label{ font-size:13px; color:var(--sub); font-weight:600; margin-bottom:6px; }
+  .stat-box .value{ font-size:30px; font-weight:800; color:var(--blue-dark); }
+  .stat-box .value small{ font-size:15px; font-weight:600; color:var(--sub); }
+
+  .bar-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:14px;
+  }
+  .bar-num{
+    width:28px;
+    text-align:center;
+    font-weight:800;
+    color:var(--blue-dark);
+    font-size:16px;
+  }
+  .bar-track{
+    flex:1;
+    background:#EEF3FB;
+    border-radius:999px;
+    height:26px;
+    overflow:hidden;
+    position:relative;
+  }
+  .bar-fill{
+    height:100%;
+    border-radius:999px;
+    width:0%;
+    transition:width .5s ease;
+  }
+  .bar-row[data-score="1"] .bar-fill{ background:#94A3B8; }
+  .bar-row[data-score="2"] .bar-fill{ background:#5A8FD6; }
+  .bar-row[data-score="3"] .bar-fill{ background:#3B72CF; }
+  .bar-row[data-score="4"] .bar-fill{ background:#2D5BC7; }
+  .bar-row[data-score="5"] .bar-fill{ background:#1D4E89; }
+  .bar-meta{
+    width:86px;
+    text-align:right;
+    font-size:13px;
+    color:var(--sub);
+    font-weight:700;
+  }
+
+  .join-card{
+    text-align:center;
+  }
+  .join-card h3{ margin:0 0 14px; font-size:17px; }
+  .join-card img{
+    width:190px; height:190px;
+    border-radius:14px;
+    border:1px solid var(--line);
+    background:#fff;
+  }
+  .join-url{
+    margin-top:14px;
+    font-size:14px;
+    font-weight:700;
+    color:var(--blue-dark);
+    word-break:break-all;
+    background:#F6F9FF;
+    border-radius:12px;
+    padding:10px 14px;
+  }
+
+  .admin-area{
+    margin-top:18px;
+    text-align:center;
+  }
+  .admin-btn{
+    font-size:12px;
+    color:var(--sub);
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:10px;
+    text-decoration:underline;
+  }
+
+  footer{
+    text-align:center;
+    font-size:12px;
+    color:var(--sub);
+    padding:6px 12px 30px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="flow-nav">
+    <a href="index.html" class="flow-tab active">① Live Poll</a>
+    <span class="flow-arrow">→</span>
+    <a href="../breakout.html?tab=together" class="flow-tab">② Breakout Canvas</a>
+    <span class="flow-arrow">→</span>
+    <a href="clustering.html" class="flow-tab">③ Clustering Matrix</a>
+    <span class="flow-arrow">→</span>
+    <a href="prioritize.html" class="flow-tab">④ Prioritization</a>
+    <span class="flow-arrow">→</span>
+    <a href="actioncard.html" class="flow-tab">⑤ Action Card</a>
+  </div>
+
+  <div class="header">
+    <span class="badge">LIVE POLL · 진행자 화면</span>
+    <h1>현재 우리 팀의 일상에서 ZEISS Agenda 2030이<br/>얼마나 구체적으로 연결되어 있다고 느끼나요?</h1>
+  </div>
+
+  <div class="wrap">
+    <div class="card">
+      <div class="stat-row">
+        <div class="stat-box">
+          <div class="label">참여 인원</div>
+          <div class="value" id="totalCount">0<small>명</small></div>
+        </div>
+        <div class="stat-box">
+          <div class="label">평균 점수</div>
+          <div class="value" id="avgScore">-<small> / 5.0</small></div>
+        </div>
+      </div>
+
+      <div id="bars">
+        <div class="bar-row" data-score="5">
+          <div class="bar-num">5</div>
+          <div class="bar-track"><div class="bar-fill" id="fill-5"></div></div>
+          <div class="bar-meta" id="meta-5">0명 · 0%</div>
+        </div>
+        <div class="bar-row" data-score="4">
+          <div class="bar-num">4</div>
+          <div class="bar-track"><div class="bar-fill" id="fill-4"></div></div>
+          <div class="bar-meta" id="meta-4">0명 · 0%</div>
+        </div>
+        <div class="bar-row" data-score="3">
+          <div class="bar-num">3</div>
+          <div class="bar-track"><div class="bar-fill" id="fill-3"></div></div>
+          <div class="bar-meta" id="meta-3">0명 · 0%</div>
+        </div>
+        <div class="bar-row" data-score="2">
+          <div class="bar-num">2</div>
+          <div class="bar-track"><div class="bar-fill" id="fill-2"></div></div>
+          <div class="bar-meta" id="meta-2">0명 · 0%</div>
+        </div>
+        <div class="bar-row" data-score="1">
+          <div class="bar-num">1</div>
+          <div class="bar-track"><div class="bar-fill" id="fill-1"></div></div>
+          <div class="bar-meta" id="meta-1">0명 · 0%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card join-card">
+      <h3>휴대폰으로 QR을 스캔해 참여하세요</h3>
+      <img id="qr" alt="참여 QR코드" />
+      <div class="join-url" id="joinUrl">-</div>
+
+      <div class="admin-area">
+        <button class="admin-btn" id="resetBtn">관리자 · 전체 초기화</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>© 2026 Joanna Lee. All rights reserved.</footer>
+
+<script>
+(function(){
+  var voteUrl = window.location.origin + '/';
+  document.getElementById('joinUrl').textContent = voteUrl;
+  document.getElementById('qr').src =
+    'https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=' + encodeURIComponent(voteUrl);
+
+  var totalEl = document.getElementById('totalCount');
+  var avgEl = document.getElementById('avgScore');
+  var timer = null;
+  var POLL_MS = 2000;
+
+  function render(data){
+    var counts = data.counts || {1:0,2:0,3:0,4:0,5:0};
+    var total = data.total || 0;
+    totalEl.innerHTML = total + '<small>명</small>';
+    avgEl.innerHTML = (total > 0 ? data.average.toFixed(1) : '-') + '<small> / 5.0</small>';
+
+    [1,2,3,4,5].forEach(function(s){
+      var c = counts[s] || 0;
+      var pct = total > 0 ? Math.round((c/total)*100) : 0;
+      document.getElementById('fill-'+s).style.width = pct + '%';
+      document.getElementById('meta-'+s).textContent = c + '명 · ' + pct + '%';
+    });
+  }
+
+  function fetchResults(){
+    fetch('/api/poll').then(function(r){ return r.json(); }).then(function(data){
+      if(data && !data.error) render(data);
+    }).catch(function(){ /* 다음 폴링에서 재시도 */ });
+  }
+
+  function startPolling(){
+    fetchResults();
+    if(timer) clearInterval(timer);
+    timer = setInterval(fetchResults, POLL_MS);
+  }
+  function stopPolling(){
+    if(timer) clearInterval(timer);
+    timer = null;
+  }
+
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden) stopPolling(); else startPolling();
+  });
+
+  startPolling();
+
+  document.getElementById('resetBtn').addEventListener('click', function(){
+    var pw = window.prompt('관리자 비밀번호를 입력하세요');
+    if(pw === null) return;
+    if(!window.confirm('모든 응답을 초기화할까요? 이 작업은 되돌릴 수 없습니다.')) return;
+    fetch('/api/poll', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ action:'reset', password: pw })
+    }).then(function(r){ return r.json(); }).then(function(data){
+      if(data && data.error === 'unauthorized'){
+        alert('비밀번호가 올바르지 않습니다.');
+      } else {
+        render(data);
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>

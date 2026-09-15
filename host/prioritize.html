@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script>
+(function(){
+  var AUTH_KEY = 'za2030_deepdive_host_auth';
+  var HOST_PASSWORD = '1234';
+  try {
+    if (localStorage.getItem(AUTH_KEY) === 'ok') return;
+  } catch(e) {}
+  var pw = window.prompt('진행자 비밀번호를 입력하세요');
+  if (pw === HOST_PASSWORD) {
+    try { localStorage.setItem(AUTH_KEY, 'ok'); } catch(e) {}
+  } else {
+    if (pw !== null) alert('비밀번호가 올바르지 않습니다.');
+    window.location.replace('../index.html');
+  }
+})();
+</script>
+<title>Prioritization 진행자 화면 · ZA2030 딥다이브세션</title>
+<link rel="stylesheet" as="style" crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<style>
+  :root{
+    --blue-dark:#1D4E89;
+    --blue:#2D6CDF;
+    --ink:#14213D;
+    --sub:#5B6B85;
+    --bg:#EEF3FB;
+    --card:#FFFFFF;
+    --line:#DCE5F5;
+    --green:#2FA365;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Pretendard","-apple-system",BlinkMacSystemFont,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    min-height:100vh;
+  }
+
+  .flow-nav{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:12px 14px;
+    background:#fff;
+    border-bottom:1px solid var(--line);
+    flex-wrap:wrap;
+  }
+  .flow-tab{
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--sub);
+    text-decoration:none;
+    padding:7px 12px;
+    border-radius:999px;
+    background:#F1F5FC;
+    white-space:nowrap;
+  }
+  .flow-tab.active{ background:var(--blue-dark); color:#fff; }
+  .flow-arrow{ color:var(--sub); font-size:12.5px; }
+
+  .header{
+    background:linear-gradient(135deg,var(--blue-dark),var(--blue));
+    color:#fff;
+    padding:26px 24px 30px;
+    text-align:center;
+  }
+  .header .badge{
+    display:inline-block;
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:2px;
+    background:rgba(255,255,255,0.18);
+    padding:6px 14px;
+    border-radius:999px;
+    margin-bottom:10px;
+  }
+  .header h1{ margin:0 0 6px; font-size:clamp(19px,2.8vw,26px); font-weight:800; }
+  .header p{ margin:0; font-size:13.5px; opacity:0.9; }
+
+  .wrap{
+    max-width:1080px;
+    margin:0 auto;
+    padding:24px 18px 50px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+  }
+  @media (max-width:860px){
+    .wrap{ grid-template-columns:1fr; }
+  }
+  .full-width{ grid-column:1 / -1; }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:20px 22px;
+    box-shadow:0 6px 18px rgba(29,78,137,0.08);
+  }
+  .card h2{ margin:0 0 14px; font-size:15px; font-weight:800; color:var(--blue-dark); }
+  .card h2 .count{ font-weight:600; color:var(--sub); font-size:13px; }
+
+  .toolbar{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:14px;
+  }
+  .btn{
+    font-family:inherit;
+    font-size:13px;
+    font-weight:700;
+    padding:9px 14px;
+    min-height:38px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:#F6F9FF;
+    color:var(--blue-dark);
+    cursor:pointer;
+  }
+  .btn.primary{ background:var(--blue-dark); color:#fff; border-color:var(--blue-dark); }
+  .btn:disabled{ opacity:0.5; cursor:not-allowed; }
+
+  .add-row{
+    display:flex;
+    gap:8px;
+    margin-bottom:14px;
+  }
+  .add-row input{
+    flex:1;
+    font-family:inherit;
+    font-size:14px;
+    padding:9px 12px;
+    border:1px solid var(--line);
+    border-radius:10px;
+  }
+
+  .cand-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 4px;
+    border-bottom:1px solid var(--line);
+  }
+  .cand-row:last-child{ border-bottom:none; }
+  .cand-row .txt{
+    flex:1;
+    font-size:14px;
+    font-weight:600;
+    color:var(--ink);
+    word-break:break-word;
+  }
+  .cand-row .src{
+    font-size:10.5px;
+    font-weight:700;
+    color:var(--sub);
+    background:#F1F5FC;
+    border-radius:999px;
+    padding:2px 8px;
+    margin-left:6px;
+    white-space:nowrap;
+  }
+  .cand-row .votes{
+    font-size:13px;
+    font-weight:800;
+    color:var(--blue-dark);
+    min-width:44px;
+    text-align:right;
+  }
+  .cand-row .mini-btn{
+    font-family:inherit;
+    font-size:11.5px;
+    font-weight:700;
+    padding:6px 9px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--sub);
+    cursor:pointer;
+  }
+  .cand-row .mini-btn.finalize{ color:var(--green); border-color:#BFE3CE; }
+  .cand-row .mini-btn.finalize:disabled{ opacity:0.4; cursor:not-allowed; }
+  .empty-note{ color:var(--sub); font-size:13px; font-style:italic; padding:8px 4px; }
+
+  .bar-row{ margin-bottom:12px; }
+  .bar-row .bar-label{
+    display:flex;
+    justify-content:space-between;
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--ink);
+    margin-bottom:4px;
+  }
+  .bar-track{
+    background:#EEF3FB;
+    border-radius:999px;
+    height:14px;
+    overflow:hidden;
+  }
+  .bar-fill{
+    height:100%;
+    border-radius:999px;
+    background:var(--blue);
+    width:0%;
+    transition:width .5s ease;
+  }
+
+  .finalize-card{
+    border-left:5px solid var(--green);
+    margin-bottom:12px;
+  }
+  .finalize-card .fc-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+  }
+  .finalize-card .fc-title{ font-size:14.5px; font-weight:800; color:var(--ink); }
+  .sentence-row{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:6px;
+    font-size:14px;
+    line-height:2;
+    margin-bottom:8px;
+  }
+  .sentence-row input,
+  .sentence-row select{
+    font-family:inherit;
+    font-size:14px;
+    font-weight:700;
+    color:var(--blue-dark);
+    border:none;
+    border-bottom:2px solid var(--line);
+    padding:4px 2px;
+    min-width:110px;
+    flex:1;
+    background:#fff;
+  }
+  .sentence-row input:focus,
+  .sentence-row select:focus{ outline:none; border-color:var(--blue); }
+  .fc-status{ font-size:11px; color:var(--sub); text-align:right; }
+
+  .stat-line{
+    text-align:center;
+    font-size:13px;
+    color:var(--sub);
+    margin-bottom:14px;
+  }
+  .stat-line b{ color:var(--blue-dark); font-size:16px; }
+
+  .actions{
+    display:flex;
+    justify-content:center;
+    gap:18px;
+    flex-wrap:wrap;
+    margin-top:6px;
+  }
+  .actions button{
+    font-size:12px;
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:10px;
+    text-decoration:underline;
+  }
+  #csvBtn{ color:var(--blue-dark); font-weight:700; }
+  #resetBtn{ color:var(--sub); }
+
+  footer{
+    text-align:center;
+    font-size:12px;
+    color:var(--sub);
+    padding:10px 12px 30px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="flow-nav">
+    <a href="index.html" class="flow-tab">① Live Poll</a>
+    <span class="flow-arrow">→</span>
+    <a href="../breakout.html?tab=together" class="flow-tab">② Breakout Canvas</a>
+    <span class="flow-arrow">→</span>
+    <a href="clustering.html" class="flow-tab">③ Clustering Matrix</a>
+    <span class="flow-arrow">→</span>
+    <a href="prioritize.html" class="flow-tab active">④ Prioritization</a>
+    <span class="flow-arrow">→</span>
+    <a href="actioncard.html" class="flow-tab">⑤ Action Card</a>
+  </div>
+
+  <div class="header">
+    <span class="badge">PRIORITIZATION · 진행자 화면</span>
+    <h1>4. Prioritization — Top 2~3 Actions</h1>
+    <p>팀이 실제로 가져갈 행동을 합의합니다</p>
+  </div>
+
+  <div class="wrap">
+
+    <div class="card full-width">
+      <h2>후보 액션 관리 <span class="count" id="candCount"></span></h2>
+      <div class="toolbar">
+        <button class="btn primary" id="importBtn">클러스터링 매트릭스에서 가져오기 (①②사분면)</button>
+      </div>
+      <div class="add-row">
+        <input id="addInput" type="text" maxlength="200" placeholder="후보 액션을 직접 입력하고 추가" />
+        <button class="btn" id="addBtn">추가</button>
+      </div>
+      <div id="candidateRows"></div>
+    </div>
+
+    <div class="card">
+      <h2>실시간 투표 현황</h2>
+      <div class="stat-line">지금까지 <b id="totalVoters">0</b>명이 투표했어요</div>
+      <div id="voteBars"></div>
+    </div>
+
+    <div class="card">
+      <h2>최종 확정 Top 2~3 <span class="count" id="finalCount">(0/3)</span></h2>
+      <div id="finalizedList"></div>
+      <div class="empty-note" id="finalizedEmpty">투표 현황을 보고 왼쪽 후보 목록에서 "확정" 버튼을 눌러 최종 액션을 정하세요.</div>
+    </div>
+
+    <div class="full-width actions">
+      <button id="csvBtn">CSV 다운로드</button>
+      <button id="resetBtn">관리자 · 전체 초기화</button>
+    </div>
+
+  </div>
+
+  <footer>© 2026 Joanna Lee. All rights reserved.</footer>
+
+<script>
+(function(){
+  var candidateRows = document.getElementById('candidateRows');
+  var candCount = document.getElementById('candCount');
+  var voteBars = document.getElementById('voteBars');
+  var totalVotersEl = document.getElementById('totalVoters');
+  var finalizedList = document.getElementById('finalizedList');
+  var finalizedEmpty = document.getElementById('finalizedEmpty');
+  var finalCount = document.getElementById('finalCount');
+  var addInput = document.getElementById('addInput');
+
+  var MAX_FINALIZED = 3;
+  // 결정 문장의 두 번째 빈칸("~을(를) 더 잘 살린다")은 자유 입력 대신 ZA2030 4대 아젠다 영역 중에서 선택
+  var AGENDA_ELEMENTS = ['Customer at the Core', 'Speed', 'Truly Global', 'High-Performance Team ZEISS'];
+  var pollTimer = null;
+  var lastData = null;
+  var finalizeSaveTimers = {}; // candidateId+field -> timer
+
+  function escapeHtml(s){
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function sourceLabel(src){
+    if(src === 'quickwins') return 'QUICK WINS';
+    if(src === 'strategic') return 'STRATEGIC';
+    return '직접 추가';
+  }
+
+  function post(body){
+    return fetch('/api/prioritize', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify(body)
+    }).then(function(r){ return r.json(); });
+  }
+
+  function render(data){
+    lastData = data;
+    var candidates = data.candidates || [];
+    var finalizedIds = (data.finalized || []).map(function(f){ return f.candidateId; });
+
+    candCount.textContent = '(' + candidates.length + '개)';
+
+    // ---- 후보 목록 ----
+    if(candidates.length === 0){
+      candidateRows.innerHTML = '<div class="empty-note">아직 후보가 없어요. 위 버튼으로 가져오거나 직접 추가해보세요.</div>';
+    } else {
+      candidateRows.innerHTML = candidates.map(function(c){
+        var isFinal = finalizedIds.indexOf(c.id) !== -1;
+        var finalDisabled = isFinal || finalizedIds.length >= MAX_FINALIZED;
+        return '<div class="cand-row" data-id="' + c.id + '">' +
+          '<span class="txt">' + escapeHtml(c.text) + '<span class="src">' + sourceLabel(c.source) + '</span></span>' +
+          '<span class="votes">' + (c.votes || 0) + '표</span>' +
+          '<button class="mini-btn finalize" data-action="finalize" data-id="' + c.id + '"' + (finalDisabled ? ' disabled' : '') + '>' +
+            (isFinal ? '확정됨' : '확정') +
+          '</button>' +
+          '<button class="mini-btn" data-action="edit" data-id="' + c.id + '">수정</button>' +
+          '<button class="mini-btn" data-action="delete" data-id="' + c.id + '">삭제</button>' +
+        '</div>';
+      }).join('');
+    }
+
+    candidateRows.querySelectorAll('[data-action="finalize"]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        post({ action:'finalize_add', candidateId: btn.getAttribute('data-id') }).then(function(data){
+          if(data && data.error === 'finalize_full'){
+            alert('최종 확정은 최대 3개까지 가능해요. 먼저 하나를 해제해주세요.');
+          }
+          if(data && data.candidates) render(data);
+        });
+      });
+    });
+    candidateRows.querySelectorAll('[data-action="edit"]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.getAttribute('data-id');
+        var cand = candidates.find(function(c){ return c.id === id; });
+        var next = window.prompt('후보 문구 수정', cand ? cand.text : '');
+        if(next === null) return;
+        post({ action:'edit_candidate', id: id, text: next }).then(function(data){
+          if(data && data.candidates) render(data);
+        });
+      });
+    });
+    candidateRows.querySelectorAll('[data-action="delete"]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        if(!window.confirm('이 후보를 삭제할까요? 관련 투표·확정 정보도 함께 지워집니다.')) return;
+        post({ action:'delete_candidate', id: btn.getAttribute('data-id') }).then(function(data){
+          if(data && data.candidates) render(data);
+        });
+      });
+    });
+
+    // ---- 실시간 투표 현황 ----
+    totalVotersEl.textContent = data.totalVoters || 0;
+    var sorted = candidates.slice().sort(function(a,b){ return (b.votes||0) - (a.votes||0); });
+    var maxVotes = sorted.length ? Math.max.apply(null, sorted.map(function(c){ return c.votes || 0; })) : 0;
+    if(sorted.length === 0){
+      voteBars.innerHTML = '<div class="empty-note">아직 후보가 없어요</div>';
+    } else {
+      voteBars.innerHTML = sorted.map(function(c){
+        var pct = maxVotes > 0 ? Math.round(((c.votes||0) / maxVotes) * 100) : 0;
+        return '<div class="bar-row">' +
+          '<div class="bar-label"><span>' + escapeHtml(c.text) + '</span><span>' + (c.votes||0) + '표</span></div>' +
+          '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%"></div></div>' +
+        '</div>';
+      }).join('');
+    }
+
+    // ---- 최종 확정 목록 ----
+    var finalized = data.finalized || [];
+    finalCount.textContent = '(' + finalized.length + '/' + MAX_FINALIZED + ')';
+    finalizedEmpty.style.display = finalized.length === 0 ? '' : 'none';
+    finalizedList.innerHTML = finalized.map(function(f){
+      var cand = candidates.find(function(c){ return c.id === f.candidateId; });
+      var text = cand ? cand.text : '(삭제된 후보)';
+      var blank2Options = '<option value="">영역 선택</option>' + AGENDA_ELEMENTS.map(function(opt){
+        var sel = f.blank2 === opt ? ' selected' : '';
+        return '<option value="' + escapeHtml(opt) + '"' + sel + '>' + escapeHtml(opt) + '</option>';
+      }).join('');
+      return '<div class="card finalize-card" style="box-shadow:none;padding:14px 16px;">' +
+        '<div class="fc-head">' +
+          '<span class="fc-title">✓ ' + escapeHtml(text) + '</span>' +
+          '<button class="mini-btn" data-action="unfinalize" data-id="' + f.candidateId + '">확정 해제</button>' +
+        '</div>' +
+        '<div class="sentence-row">우리 팀은 ' +
+          '<input type="text" maxlength="200" placeholder="예: 주간 회고" data-field="blank1" data-id="' + f.candidateId + '" value="' + escapeHtml(f.blank1 || '') + '" />' +
+          '을(를) 통해 ' +
+          '<select data-field="blank2" data-id="' + f.candidateId + '">' + blank2Options + '</select>' +
+          '을(를) 더 잘 살린다.</div>' +
+        '<div class="fc-status" data-status-id="' + f.candidateId + '">' + (f.updatedAt ? '저장됨' : '') + '</div>' +
+      '</div>';
+    }).join('');
+
+    finalizedList.querySelectorAll('[data-action="unfinalize"]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        post({ action:'finalize_remove', candidateId: btn.getAttribute('data-id') }).then(function(data){
+          if(data && data.candidates) render(data);
+        });
+      });
+    });
+    finalizedList.querySelectorAll('input[data-field], select[data-field]').forEach(function(el){
+      var isSelect = el.tagName === 'SELECT';
+      el.addEventListener(isSelect ? 'change' : 'input', function(){
+        var id = el.getAttribute('data-id');
+        var field = el.getAttribute('data-field');
+        var key = id + ':' + field;
+        var statusEl = finalizedList.querySelector('[data-status-id="'+id+'"]');
+        if(statusEl) statusEl.textContent = isSelect ? '저장 중...' : '입력 중...';
+        if(finalizeSaveTimers[key]) clearTimeout(finalizeSaveTimers[key]);
+        // 선택형(select)은 바로 저장, 텍스트 입력은 타이핑이 끝난 뒤 저장(디바운스)
+        finalizeSaveTimers[key] = setTimeout(function(){
+          post({ action:'finalize_field', candidateId: id, field: field, value: el.value }).then(function(data){
+            var st = finalizedList.querySelector('[data-status-id="'+id+'"]');
+            if(st) st.textContent = '저장됨';
+            if(data && data.candidates) lastData = data; // 다음 폴링까지는 로컬 입력 유지, 전체 재렌더는 하지 않음
+          });
+        }, isSelect ? 0 : 900);
+      });
+    });
+  }
+
+  function fetchState(){
+    fetch('/api/prioritize').then(function(r){ return r.json(); }).then(function(data){
+      // 입력 중인 필드가 있으면 전체 재렌더로 포커스가 끊기지 않도록, 포커스가 없는 경우에만 갱신
+      var activeTag = document.activeElement && document.activeElement.tagName;
+      if((activeTag === 'INPUT' || activeTag === 'SELECT') && finalizedList.contains(document.activeElement)) return;
+      render(data);
+    }).catch(function(){ /* 다음 폴링에서 재시도 */ });
+  }
+
+  function startPolling(){
+    fetchState();
+    if(pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(fetchState, 2000);
+  }
+  function stopPolling(){
+    if(pollTimer) clearInterval(pollTimer);
+    pollTimer = null;
+  }
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden) stopPolling(); else startPolling();
+  });
+  startPolling();
+
+  document.getElementById('importBtn').addEventListener('click', function(){
+    post({ action:'import_from_clustering' }).then(function(data){
+      if(data && data.ok){
+        render(data);
+        if(data.added > 0){
+          alert(data.added + '개의 새 후보를 가져왔어요.');
+        } else {
+          alert('클러스터링 매트릭스에 새로 가져올 키워드가 없어요.');
+        }
+      }
+    });
+  });
+
+  document.getElementById('addBtn').addEventListener('click', function(){
+    var text = addInput.value.trim();
+    if(!text) return;
+    post({ action:'add_candidate', text: text }).then(function(data){
+      if(data && data.candidates){
+        addInput.value = '';
+        render(data);
+      }
+    });
+  });
+  addInput.addEventListener('keydown', function(e){
+    if(e.key === 'Enter') document.getElementById('addBtn').click();
+  });
+
+  function csvEscape(v){
+    var s = (v === null || v === undefined) ? '' : String(v);
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  function pad2(n){ return (n < 10 ? '0' : '') + n; }
+
+  document.getElementById('csvBtn').addEventListener('click', function(){
+    if(!lastData || !lastData.candidates || !lastData.candidates.length){
+      alert('아직 데이터가 없어요.');
+      return;
+    }
+    var finalizedMap = {};
+    (lastData.finalized || []).forEach(function(f){ finalizedMap[f.candidateId] = f; });
+    var headers = ['후보 액션', '출처', '득표수', '최종 확정', '결정 문장'];
+    var rows = [headers].concat(lastData.candidates.map(function(c){
+      var f = finalizedMap[c.id];
+      var sentence = f ? ('우리 팀은 ' + (f.blank1||'') + '을(를) 통해 ' + (f.blank2||'') + '을(를) 더 잘 살린다.') : '';
+      return [c.text, sourceLabel(c.source), c.votes || 0, f ? 'Y' : '', sentence];
+    }));
+    var csv = rows.map(function(row){ return row.map(csvEscape).join(','); }).join('\r\n');
+    var blob = new Blob(['﻿' + csv], { type:'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var now = new Date();
+    var fname = 'prioritization-' + now.getFullYear() + pad2(now.getMonth()+1) + pad2(now.getDate()) +
+      '-' + pad2(now.getHours()) + pad2(now.getMinutes()) + '.csv';
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = fname;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', function(){
+    var pw = window.prompt('관리자 비밀번호를 입력하세요');
+    if(pw === null) return;
+    if(!window.confirm('후보·투표·확정 결과를 모두 초기화할까요? 이 작업은 되돌릴 수 없습니다.')) return;
+    post({ action:'reset', password: pw }).then(function(data){
+      if(data && data.error === 'unauthorized'){
+        alert('비밀번호가 올바르지 않습니다.');
+      } else if(data && data.candidates !== undefined){
+        render(data);
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>
